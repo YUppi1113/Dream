@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>夢霊視 - 神秘の解読者</title>
+    <!-- APIキーの設定に関する注意書き -->
+    <script>
+        // 注意: 実際のアプリケーションでは、APIキーをクライアントサイドに直接埋め込むべきではありません。
+        // 安全なAPIキー管理のためには、サーバーサイドでリクエストを処理するべきです。
+        // このサンプルコードは、実装方法の説明のためのものであり、実運用には適していません。
+    </script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="cursor-glow"></div>
+    
+    <div class="pentagram" id="pentagram"></div>
+    
+    <img class="eye" id="mysticeye" alt="Mystic Eye">
+    
+    <div class="container">
+        <header>
+            <h1>夢霊視</h1>
+            <h2>〜神秘の解読者〜</h2>
+        </header>
+        
+        <div class="card">
+            <p>あなたの見た夢を入力してください。霊視者が夢の中に隠された真実と未来への道標を読み解きます。</p>
+            <textarea id="dreamInput" placeholder="夢の内容を詳しく教えてください..."></textarea>
+            <div class="button-container">
+                <button id="psychicButton">霊視を開始する</button>
+                <button id="premiumButton">より深い霊視 (¥500)</button>
+            </div>
+        </div>
+        
+        <div class="loading">
+            <div class="loading-pentagram" id="loadingPentagram"></div>
+            <p class="loading-text">霊界と交信中...</p>
+        </div>
+        
+        <div class="result">
+            <div class="card">
+                <h2>霊視結果</h2>
+                <div class="result-text" id="resultText"></div>
+                <div class="button-container">
+                    <button id="premiumButtonInResult">より深い霊視 (¥500)</button>
+                </div>
+            </div>
+            
+            <div class="tarot-selection">
+                <h2>タロットカードを選んでください</h2>
+                <p>あなたの直感で2枚のカードを選んでください。カードはあなたの夢の秘密をさらに明らかにするでしょう。</p>
+                
+                <div class="tarot-cards" id="tarotCards">
+                    <!-- タロットカードはJavaScriptで生成 -->
+                </div>
+                
+                <div class="tarot-interpretation">
+                    <div class="interpretation-header">
+                        <h2>タロット霊視結果</h2>
+                    </div>
+                    
+                    <div class="selected-cards" id="selectedCards"></div>
+                    
+                    <div class="result-text" id="tarotInterpretationText"></div>
+                    
+                    <div class="symbol-map" id="symbolMap"></div>
+                </div>
+            </div>
+            
+            <div class="share-buttons" id="shareButtons">
+                <!-- SNSシェアボタンはJavaScriptで生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="premiumModal">
+        <div class="modal-content">
+            <button class="close-button">&times;</button>
+            <h2 class="modal-title">プレミアム霊視</h2>
+            <p class="modal-text">より深い霊視を受けるには、¥500の支払いが必要です。この特別な霊視では、タロットカードを用いてあなたの夢の隠された意味をより詳しく解読します。</p>
+            <div class="modal-buttons">
+                <button id="cancelPremium">キャンセル</button>
+                <button id="confirmPremium">支払いを続ける</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        &copy; 2025 夢霊視 - 神秘の解読者 | すべての権利を留保します
+    </footer>
+
+    <!-- モジュールとして読み込み -->
+    <script type="module">
+        import { svgImages } from './assets/images.js';
+        
+        // SVG要素の設定
+        document.getElementById('mysticeye').src = svgImages.eye;
+        document.getElementById('pentagram').innerHTML = svgImages.pentagram;
+        document.getElementById('loadingPentagram').innerHTML = svgImages.loadingPentagram;
+        
+        // タロットカードの生成
+        const tarotCards = document.getElementById('tarotCards');
+        for (const [cardId, cardImage] of Object.entries(svgImages.tarotCards)) {
+            const cardName = cardId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            
+            const cardElement = document.createElement('div');
+            cardElement.className = 'tarot-card';
+            cardElement.setAttribute('data-id', cardId);
+            
+            const contentElement = document.createElement('div');
+            contentElement.className = 'tarot-card-content';
+            contentElement.style.backgroundImage = `url('${cardImage}')`;
+            
+            const nameElement = document.createElement('div');
+            nameElement.className = 'tarot-name';
+            nameElement.textContent = cardName;
+            
+            contentElement.appendChild(nameElement);
+            cardElement.appendChild(contentElement);
+            tarotCards.appendChild(cardElement);
+        }
+        
+        // シェアボタンの生成
+        const shareButtons = document.getElementById('shareButtons');
+        for (const [network, icon] of Object.entries(svgImages.socialIcons)) {
+            const buttonElement = document.createElement('div');
+            buttonElement.className = `share-button ${network}`;
+            buttonElement.innerHTML = icon;
+            shareButtons.appendChild(buttonElement);
+        }
+    </script>
+    <script type="module" src="js/main.js"></script>
+    <script>
+        // タロットカード選択の処理はmain.jsで行います
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初期状態では解釈領域を非表示に
+            document.querySelector('.tarot-interpretation').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
