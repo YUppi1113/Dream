@@ -121,6 +121,7 @@ async function generatePsychicReading(dream, isPremium = false) {
             // 神秘的な演出のために少し遅延を入れる
             await new Promise(resolve => setTimeout(resolve, 1000));
             
+            console.log('霊視APIリクエスト送信中...');
             const response = await fetch(APP_CONFIG.api.psychicReadingEndpoint, {
                 method: 'POST',
                 headers: {
@@ -133,13 +134,25 @@ async function generatePsychicReading(dream, isPremium = false) {
                 })
             });
             
-            if (response.ok) {
-                const data = await response.json();
+            console.log('霊視APIレスポンス受信:', response.status);
+            
+            // レスポンスがJSONでなくてもエラーにしない
+            const responseText = await response.text();
+            let data;
+            
+            try {
+                data = JSON.parse(responseText);
+            } catch (jsonError) {
+                console.error('JSONパースエラー:', jsonError, 'レスポンステキスト:', responseText);
+                return `【API接続エラー】\n\n申し訳ありません。霊視サーバーからの応答を解析できませんでした。しばらくしてから再度お試しください。`;
+            }
+            
+            if (data.reading) {
                 console.log('霊視結果を受信しました');
                 return data.reading;
             }
             
-            throw new Error('APIからの応答が正常ではありません');
+            throw new Error('APIからの応答に霊視結果が含まれていません');
         } catch (apiError) {
             console.error('API接続エラー:', apiError);
             return `【API接続エラー】\n\n申し訳ありません。霊視サーバーとの接続に問題が発生しました。インターネット接続を確認し、しばらくしてから再度お試しください。`;
@@ -912,23 +925,77 @@ function initApp() {
         // Stripeオブジェクトの初期化
         async function initializeStripe() {
             try {
-                // 公開キーをサーバーから取得
-                const response = await fetch('/api/payment/config');
-                if (!response.ok) {
-                    throw new Error('決済システムの設定取得に失敗しました');
+                console.log('Stripe設定取得中...');
+                
+                // APIのベースURLを決定（環境に合わせて変更可能）
+                // 開発環境では相対パスの代わりに絶対URLを使用（ngrok対応）
+                // ブラウザのURLから現在のURLを取得
+                let apiBaseUrl = '';
+                
+                // 現在のURLからAPIベースURLを構築
+                const currentUrl = window.location.href;
+                console.log('現在のURL:', currentUrl);
+                
+                // URLがngrokを含む場合は、そのドメインをAPIベースURLとして使用
+                if (currentUrl.includes('ngrok')) {
+                    // URLオブジェクトを作成してドメイン部分を抽出
+                    const url = new URL(currentUrl);
+                    apiBaseUrl = `${url.protocol}//${url.host}`;
+                    console.log('ngrokドメインを検出:', apiBaseUrl);
                 }
                 
-                const { publishableKey } = await response.json();
+                // 公開キーをサーバーから取得
+                const configUrl = `${apiBaseUrl}/api/payment/config`;
+                console.log('configリクエスト先URL:', configUrl);
+                const response = await fetch(configUrl);
+                console.log('Stripe設定レスポンスステータス:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    throw new Error(`決済システムの設定取得に失敗しました: ${response.status} ${response.statusText}`);
+                }
+                
+                // レスポンスの詳細情報を取得
+                const responseData = await response.text();
+                console.log('Stripe設定レスポンス詳細:', responseData);
+                
+                // JSONとしてパース
+                const jsonData = JSON.parse(responseData);
+                const { publishableKey } = jsonData;
+                
                 if (!publishableKey) {
-                    throw new Error('Stripe公開キーが見つかりません');
+                    throw new Error('Stripe公開キーが見つかりません。サーバー環境変数の設定を確認してください。');
+                }
+                
+                console.log('Stripe公開キー取得成功:', publishableKey.substring(0, 10) + '...');
+                
+                // グローバルStripeオブジェクトが存在するか確認
+                if (typeof Stripe === 'undefined') {
+                    throw new Error('Stripeライブラリが読み込まれていません。HTML内のStripe.jsスクリプトを確認してください。');
                 }
                 
                 // Stripeオブジェクトを初期化
-                stripePromise = Stripe(publishableKey);
-                console.log('Stripeを初期化しました');
-                return true;
+                try {
+                    stripePromise = Stripe(publishableKey);
+                    console.log('Stripeを初期化しました');
+                    return true;
+                } catch (stripeInitError) {
+                    console.error('Stripe初期化エラー:', stripeInitError);
+                    throw new Error(`Stripe初期化エラー: ${stripeInitError.message}`);
+                }
             } catch (error) {
                 console.error('Stripe初期化エラー:', error);
+                // スタックトレースも出力
+                if (error.stack) {
+                    console.error('エラースタックトレース:', error.stack);
+                }
+                
+                // プレミアムモーダルを表示状態に
+                const premiumModal = document.getElementById('premiumModal');
+                if (premiumModal) {
+                    premiumModal.style.display = 'flex';
+                }
+                
+                // エラーメッセージを表示
                 const paymentError = document.getElementById('payment-error');
                 if (paymentError) {
                     paymentError.textContent = `決済システムの初期化に失敗しました: ${error.message}`;
@@ -953,8 +1020,35 @@ function initApp() {
                     }
                 }
                 
+                console.log('Stripeセッションを作成中...');
+                
+                // ブラウザの接続診断
+                try {
+                    const testResponse = await fetch('/api/payment/config');
+                    console.log('接続テスト結果:', testResponse.status, testResponse.statusText);
+                    if (!testResponse.ok) {
+                        console.warn('API基本接続に問題があります');
+                    }
+                } catch (testError) {
+                    console.error('API基本接続テストエラー:', testError);
+                }
+                
+                // APIのベースURLを決定（環境に合わせて変更可能）
+                // 現在のURLからAPIベースURLを構築
+                let apiBaseUrl = '';
+                const currentUrl = window.location.href;
+                
+                // URLがngrokを含む場合は、そのドメインをAPIベースURLとして使用
+                if (currentUrl.includes('ngrok')) {
+                    // URLオブジェクトを作成してドメイン部分を抽出
+                    const url = new URL(currentUrl);
+                    apiBaseUrl = `${url.protocol}//${url.host}`;
+                    console.log('ngrokドメインを検出:', apiBaseUrl);
+                }
+                
                 // APIからセッションURLを取得
-                const response = await fetch('/api/payment/create-checkout-session', {
+                console.log('APIリクエスト開始...');
+                const response = await fetch(`${apiBaseUrl}/api/payment/create-checkout-session`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -964,21 +1058,69 @@ function initApp() {
                     })
                 });
                 
-                if (!response.ok) {
-                    throw new Error('決済セッションの作成に失敗しました');
+                // レスポンスのステータスとテキストを記録
+                console.log('APIレスポンスステータス:', response.status, response.statusText);
+                console.log('レスポンスヘッダー:', JSON.stringify([...response.headers.entries()]));
+                
+                // レスポンスの詳細情報を取得
+                let responseData;
+                try {
+                    responseData = await response.text();
+                    console.log('APIレスポンス詳細:', responseData);
+                } catch (textError) {
+                    console.error('レスポンステキスト取得エラー:', textError);
+                    responseData = '(テキスト取得エラー)';
                 }
                 
-                const { url } = await response.json();
+                if (!response.ok) {
+                    throw new Error(`決済セッションの作成に失敗しました: ${response.status} ${response.statusText} - ${responseData}`);
+                }
+                
+                // JSONとしてパース
+                let jsonData;
+                try {
+                    jsonData = JSON.parse(responseData);
+                } catch (jsonError) {
+                    console.error('JSONパースエラー:', jsonError);
+                    throw new Error(`レスポンスのJSON解析に失敗しました: ${jsonError.message}`);
+                }
+                
+                const { url } = jsonData;
+                
+                if (!url) {
+                    throw new Error('セッションURLが見つかりません');
+                }
+                
+                console.log('セッションURL取得成功、リダイレクト先:', url);
+                
+                // URLのバリデーション
+                try {
+                    new URL(url);
+                } catch (urlError) {
+                    console.error('不正なURL形式:', url);
+                    throw new Error(`不正なURL形式: ${url}`);
+                }
                 
                 // Stripeのチェックアウトページにリダイレクト
+                console.log('リダイレクト実行...');
                 window.location.href = url;
             } catch (error) {
                 console.error('決済セッション作成エラー:', error);
+                // スタックトレースも出力
+                if (error.stack) {
+                    console.error('エラースタックトレース:', error.stack);
+                }
                 
                 // 支払い処理中モーダルを非表示
                 const paymentProcessingModal = document.getElementById('paymentProcessingModal');
                 if (paymentProcessingModal) {
                     paymentProcessingModal.style.display = 'none';
+                }
+                
+                // プレミアムモーダルを再表示
+                const premiumModal = document.getElementById('premiumModal');
+                if (premiumModal) {
+                    premiumModal.style.display = 'flex';
                 }
                 
                 // エラーメッセージを表示
@@ -987,6 +1129,9 @@ function initApp() {
                     paymentError.textContent = `決済処理中にエラーが発生しました: ${error.message}`;
                     paymentError.style.display = 'block';
                 }
+                
+                // エラーを上位に伝播させる
+                throw error;
             }
         }
         
@@ -1036,7 +1181,21 @@ function initApp() {
         // 決済セッションの状態を確認
         async function verifyPaymentSession(sessionId) {
             try {
-                const response = await fetch(`/api/payment/checkout-session/${sessionId}`);
+                // APIのベースURLを決定
+                let apiBaseUrl = '';
+                const currentUrl = window.location.href;
+                
+                // URLがngrokを含む場合は、そのドメインをAPIベースURLとして使用
+                if (currentUrl.includes('ngrok')) {
+                    const url = new URL(currentUrl);
+                    apiBaseUrl = `${url.protocol}//${url.host}`;
+                    console.log('ngrokドメインを検出:', apiBaseUrl);
+                }
+                
+                // セッション検証APIを呼び出し
+                const response = await fetch(`${apiBaseUrl}/api/payment/checkout-session/${sessionId}`);
+                console.log('セッション検証レスポンスステータス:', response.status);
+                
                 if (!response.ok) {
                     throw new Error('決済セッションの検証に失敗しました');
                 }
@@ -1077,7 +1236,30 @@ function initApp() {
                 }
                 
                 // Checkoutセッションを作成
-                createCheckoutSession();
+                try {
+                    await createCheckoutSession();
+                } catch (error) {
+                    console.error('決済セッション作成エラー (UI層):', error);
+                    
+                    // 支払い処理中モーダルを非表示
+                    const paymentProcessingModal = document.getElementById('paymentProcessingModal');
+                    if (paymentProcessingModal) {
+                        paymentProcessingModal.style.display = 'none';
+                    }
+                    
+                    // プレミアムモーダルを再表示
+                    const premiumModal = document.getElementById('premiumModal');
+                    if (premiumModal) {
+                        premiumModal.style.display = 'flex';
+                    }
+                    
+                    // エラーメッセージを表示
+                    const paymentError = document.getElementById('payment-error');
+                    if (paymentError) {
+                        paymentError.textContent = `決済処理中にエラーが発生しました: ${error.message || 'エラーの詳細不明'}`;
+                        paymentError.style.display = 'block';
+                    }
+                }
             });
         }
         
