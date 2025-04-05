@@ -10,8 +10,8 @@ const stripe = require('stripe');
 // 環境変数の読み込み
 dotenv.config();
 
-// デバッグモードの設定（環境変数がない場合はデフォルトでtrue）
-process.env.DEBUG_MODE = process.env.DEBUG_MODE || 'true';
+// デバッグモードの設定（環境変数がない場合はデフォルトでfalse）
+process.env.DEBUG_MODE = process.env.DEBUG_MODE || 'false';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,10 +52,12 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// 霊視APIエンドポイント
-app.post('/api/psychic-reading', async (req, res) => {
+// 霊視APIエンドポイント - POSTとGETの両方をサポート
+app.all('/api/psychic-reading', async (req, res) => {
   try {
-    const { dream, isPremium } = req.body;
+    // POSTリクエストの場合はreq.bodyからデータを取得、GETリクエストの場合はreq.queryから取得
+    const dream = req.method === 'POST' ? req.body.dream : req.query.dream;
+    const isPremium = req.method === 'POST' ? req.body.isPremium : (req.query.isPremium === 'true');
     
     if (!dream || dream.length < 10) {
       return res.status(400).json({ error: '夢の内容が短すぎます' });
@@ -87,6 +89,8 @@ app.post('/api/psychic-reading', async (req, res) => {
       console.log('デバッグモード: ダミーレスポンスを返します');
       return res.json(dummyResponse);
     }
+    
+    console.log('本番モード: OpenAI APIリクエストを実行します');
     
     // ChatGPT APIに送信するプロンプト
     const prompt = isPremium ? 
@@ -139,10 +143,15 @@ app.post('/api/psychic-reading', async (req, res) => {
   }
 });
 
-// タロット解釈APIエンドポイント
-app.post('/api/dream-interpretation', async (req, res) => {
+// タロット解釈APIエンドポイント - POSTとGETの両方をサポート
+app.all('/api/dream-interpretation', async (req, res) => {
   try {
-    const { card1, card2, card1Meaning, card2Meaning, dream } = req.body;
+    // POSTリクエストの場合はreq.bodyからデータを取得、GETリクエストの場合はreq.queryから取得
+    const card1 = req.method === 'POST' ? req.body.card1 : req.query.card1;
+    const card2 = req.method === 'POST' ? req.body.card2 : req.query.card2;
+    const card1Meaning = req.method === 'POST' ? req.body.card1Meaning : req.query.card1Meaning;
+    const card2Meaning = req.method === 'POST' ? req.body.card2Meaning : req.query.card2Meaning;
+    const dream = req.method === 'POST' ? req.body.dream : req.query.dream;
     
     if (!dream || dream.length < 10) {
       return res.status(400).json({ error: '夢の内容が短すぎます' });
@@ -154,6 +163,25 @@ app.post('/api/dream-interpretation', async (req, res) => {
       return res.status(500).json({ error: 'APIキーが設定されていません。クライアント側のフォールバックを使用します。' });
     }
     
+    // デバッグモードの場合はダミーレスポンスを返す
+    if (process.env.DEBUG_MODE === 'true') {
+      console.log('デバッグモード: ダミーレスポンスを返します');
+      const dummyInterpretation = `霊視者からの特別メッセージ\n
+      あなたの夢は神秘的な次元からのメッセージです。選ばれたタロットカードは、あなたの潜在意識が示す道標と完全に共鳴しています。\n\n
+      夢の象徴の解読\n
+      夢に現れた象徴は、あなたの精神的成長の過程を映し出しています。内なる光が目覚め、新たな視点があなたを導いています。\n\n
+      カードと夢の共鳴\n
+      タロットカードのエネルギーはあなたの夢と深く結びついており、宇宙の流れと調和しています。\n\n
+      未来へのガイダンス\n
+      今は変化を受け入れ、内なる声に従うときです。あなたの前に広がる道は、新たな可能性に満ちています。`;
+      return res.json({ interpretation: dummyInterpretation });
+    }
+    
+    console.log('本番モード: OpenAI APIリクエストを実行します');
+    
+    // 霊視結果を取得
+    const psychicReading = req.method === 'POST' ? req.body.psychicReading : req.query.psychicReading;
+    
     // ChatGPT APIに送信するプロンプト
     const prompt = `あなたは古代のタロット読者であり夢の解読者です。以下のタロットカードと夢の組み合わせを元に、詳細な深層解釈を提供してください。
 
@@ -163,12 +191,15 @@ app.post('/api/dream-interpretation', async (req, res) => {
     
     夢の内容: "${dream}"
     
+    ${psychicReading ? `既存の霊視結果:\n"${psychicReading}"\n` : ''}
+    
     これらのカードと夢の内容の関連性、隠されたシンボル、潜在意識からのメッセージ、将来への道標などを詳しく解読してください。
+    ${psychicReading ? '既存の霊視結果も参照し、それを補完して一貫性のある解釈を提供してください。' : ''}
     神秘的で詩的な言葉遣いを使い、以下の4つのセクションに分けて解釈を提供してください：
     
     1. 霊視者からの特別メッセージ（全体の解釈）
     2. 夢の象徴の解読（夢に現れる重要なシンボルの意味）
-    3. カードと夢の共鳴（タロットカードがどのように夢と関連しているか）
+    3. カードと夢の共鳴（タロットカードがどのように夢と関連しているか${psychicReading ? '、そして既存の霊視結果とどう繋がるか' : ''}）
     4. 未来へのガイダンス（実践的なアドバイスと未来の展望）
     
     各セクションを2~3段落で説明し、読者に深い洞察と気づきを与えるような解釈にしてください。`;

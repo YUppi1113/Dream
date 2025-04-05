@@ -488,6 +488,33 @@ header {
 .result {
     display: none;
     animation: fadeIn 1s ease;
+    margin-bottom: 30px;
+}
+
+/* 課金後のレイアウト - 霊視結果とタロット解釈を並べて表示 */
+.paid-content-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+@media (min-width: 1200px) {
+    .paid-content-container {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 30px;
+    }
+    
+    /* 複数カラムレイアウト時のサイズ調整 */
+    .result {
+        flex: 1;
+        margin-right: 0;
+    }
+    
+    .tarot-interpretation {
+        flex: 1;
+        margin-left: 0;
+    }
 }
 
 @keyframes fadeIn {

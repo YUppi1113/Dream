@@ -381,20 +381,52 @@ export async function generateDreamDeepInterpretation(card1, card2, dream) {
             return `タロットカード「${tarot1.name}」と「${tarot2.name}」からの深層解釈を行うには、より詳しい夢の内容が必要です。夢の内容を詳しく入力していただくことで、より正確な霊視を提供できます。`;
         }
 
-        // ChatGPT APIを使用
+        // ChatGPT APIを使用 (GETメソッドで送信)
         try {
-            const response = await fetch('/api/dream-interpretation', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    card1: tarot1.name,
-                    card2: tarot2.name,
-                    card1Meaning: tarot1.meaning,
-                    card2Meaning: tarot2.meaning,
-                    dream: dream
-                })
+            // 現在の霊視結果を取得（既存の解釈と組み合わせるため）
+            // まずDOMから読み取り、なければセッションストレージから復元
+            const resultText = document.getElementById('resultText');
+            let psychicReading = '';
+            
+            if (resultText && resultText.textContent) {
+                psychicReading = resultText.textContent;
+            } else {
+                // セッションストレージから保存された霊視結果を取得
+                const savedHtml = sessionStorage.getItem('savedPsychicReading');
+                if (savedHtml) {
+                    // HTMLからテキストだけを抽出
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = savedHtml;
+                    psychicReading = tempDiv.textContent || '';
+                }
+            }
+            
+            // 夢の内容が空の場合はセッションストレージから復元
+            let dreamText = dream;
+            if (!dreamText || dreamText.trim().length < 10) {
+                const savedDream = sessionStorage.getItem('savedDream');
+                if (savedDream && savedDream.trim().length >= 10) {
+                    console.log('セッションストレージから夢の内容を取得します');
+                    dreamText = savedDream;
+                }
+            }
+            
+            console.log('タロット解釈に渡す霊視結果（一部）:', 
+                psychicReading ? psychicReading.substring(0, 50) + '...' : '霊視結果なし');
+            
+            // URLSearchParamsを使用してGETリクエストのクエリパラメータを構築
+            const params = new URLSearchParams({
+                card1: tarot1.name,
+                card2: tarot2.name,
+                card1Meaning: tarot1.meaning,
+                card2Meaning: tarot2.meaning,
+                dream: dreamText,
+                psychicReading: psychicReading
+            });
+            
+            // GETメソッドで送信
+            const response = await fetch(`/api/dream-interpretation?${params.toString()}`, {
+                method: 'GET'
             });
             
             if (response.ok) {
@@ -426,28 +458,28 @@ function formatDeepInterpretation(interpretation) {
     const paragraphs = interpretation.split(/\n\n+/);
     
     // セクションを追加
-    let formatted = `✨ 【霊視者からの特別メッセージ】 ✨\n\n`;
+    let formatted = `✨ 【霊視結果とタロットの融合メッセージ】 ✨\n\n`;
     
     if (paragraphs.length >= 1) {
         formatted += paragraphs[0] + "\n\n";
     }
     
-    formatted += `${starDivider}\n\n🔮 【夢の象徴の解読】 🔮\n\n`;
+    formatted += `${starDivider}\n\n🔮 【夢の象徴の深層解読】 🔮\n\n`;
     
     if (paragraphs.length >= 2) {
         formatted += paragraphs[1] + "\n\n";
     }
     
     if (paragraphs.length >= 3) {
-        formatted += `${starDivider}\n\n💫 【カードと夢の共鳴】 💫\n\n${paragraphs[2]}\n\n`;
+        formatted += `${starDivider}\n\n💫 【霊視とタロットの神秘的共鳴】 💫\n\n${paragraphs[2]}\n\n`;
     }
     
-    formatted += `${starDivider}\n\n💎 【未来へのガイダンス】 💎\n\n`;
+    formatted += `${starDivider}\n\n💎 【統合された未来へのガイダンス】 💎\n\n`;
     
     if (paragraphs.length >= 4) {
-        formatted += paragraphs[3] + "\n\n";
+        formatted += paragraphs[4] || paragraphs[3] + "\n\n";
     } else {
-        formatted += "あなたの夢とタロットカードは、近い未来への重要なメッセージを含んでいます。自分の直感を信じ、カードが示す方向性を意識しながら、一歩一歩前進してください。\n\n";
+        formatted += "あなたの夢とタロットカードの組み合わせは、霊視によって明らかになった潜在意識とさらに深く共鳴しています。これらの総合的なメッセージを胸に、自分の直感を信じ、カードと霊視が示す方向性を意識しながら、一歩一歩前進してください。\n\n";
     }
     
     return formatted;
