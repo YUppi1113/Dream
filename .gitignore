@@ -1,0 +1,20 @@
+# 環境変数
+.env
+
+# 依存関係
+node_modules/
+
+# ログファイル
+*.log
+
+# macOS
+.DS_Store
+
+# エディタ設定
+.vscode/
+.idea/
+
+# キャッシュとビルドディレクトリ
+.cache/
+dist/
+build/
