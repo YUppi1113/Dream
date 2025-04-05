@@ -136,91 +136,20 @@ async function generatePsychicReading(dream, isPremium = false) {
             if (response.ok) {
                 const data = await response.json();
                 console.log('霊視結果を受信しました');
-                return data.reading || generateLocalPsychicReading(dream, isPremium);
+                return data.reading;
             }
+            
+            throw new Error('APIからの応答が正常ではありません');
         } catch (apiError) {
             console.error('API接続エラー:', apiError);
-            // エラー時はローカル生成にフォールバック
+            return `【API接続エラー】\n\n申し訳ありません。霊視サーバーとの接続に問題が発生しました。インターネット接続を確認し、しばらくしてから再度お試しください。`;
         }
-        
-        // APIが失敗した場合はローカル生成にフォールバック
-        return generateLocalPsychicReading(dream, isPremium);
     } catch (error) {
         console.error('霊視生成エラー:', error);
         return `【霊視エラー】\n\n申し訳ありません。霊界との接続に問題が発生しました。静かな心で再度お試しください。`;
     }
 }
 
-/**
- * ローカルで霊視結果を生成するフォールバック関数
- * @param {string} dream - 夢の内容
- * @param {boolean} isPremium - プレミアムリクエストかどうか
- * @returns {string} - 生成された霊視結果
- */
-function generateLocalPsychicReading(dream, isPremium = false) {
-    console.log('ローカル霊視生成を使用します');
-    
-    // 夢のキーワードを抽出
-    const keywords = dream.split(/[\s,。、！？!?]+/).filter(word => word.length > 1);
-    const randomKeywords = keywords.sort(() => 0.5 - Math.random()).slice(0, 3);
-    
-    // シンボルのランダム選択
-    const symbols = [
-        "月", "星", "水", "炎", "風", "道", "光", "影", "扉", "鏡", 
-        "花", "鳥", "魚", "山", "空", "海", "木", "石", "目", "手"
-    ];
-    const randomSymbols = symbols.sort(() => 0.5 - Math.random()).slice(0, 3);
-    
-    // 星空の区切り線
-    const starDivider = "✧･ﾟ: *✧･ﾟ:* *:･ﾟ✧*:･ﾟ✧";
-    
-    // 基本霊視結果
-    let result = `✨ 【霊視結果】 ✨\n\nあなたの夢には<span class="highlight">${randomSymbols[0]}と${randomSymbols[1]}</span>のエネルギーが強く現れています。これは<span class="highlight">内なる変化と目覚め</span>の兆候です。\n\n`;
-    
-    result += `${starDivider}\n\n`;
-    
-    result += `🔮 【夢のメッセージ】 🔮\n\nあなたの夢に現れた<span class="highlight">${randomKeywords[0] || "象徴"}</span>は、あなたの潜在意識からの重要なメッセージを運んでいます。特に<span class="highlight">${randomKeywords[1] || "要素"}</span>は、あなたの精神的な成長と関連しており、より深い意味を持っています。\n\n`;
-    
-    result += `${starDivider}\n\n`;
-    
-    result += `💫 【未来への指針】 💫\n\n近い将来、<span class="highlight">${randomKeywords[2] || "状況"}</span>に関連した重要な出来事があなたを待っています。この機会を活かすことで、人生の新たな扉が開くでしょう。\n\n`;
-    
-    result += `${starDivider}\n\n`;
-    
-    // 基本アドバイス
-    result += `💎 【霊からのアドバイス】 💎\n\n内なる声に耳を傾け、直感を信じてください。あなたの魂は正しい道を知っています。日常の喧騒から離れ、静かな瞑想の時間を持つことで、より明確な導きを受け取れるでしょう。`;
-    
-    // プレミアム機能の場合は追加コンテンツ
-    if (isPremium) {
-        result += `\n\n${starDivider}\n\n`;
-        result += `✨ 【深層解析】 ✨\n\n`;
-        result += `あなたの夢は<span class="highlight">過去生</span>との繋がりを示しています。${randomSymbols[2]}のシンボルは、あなたが前世で習得した特別な才能や能力が、現世でも発揮される時期が近づいていることを教えています。\n\n`;
-        result += `この才能は<span class="highlight">${getRandomTalent()}</span>に関連しており、今後のあなたの人生に大きな影響をもたらすでしょう。直感を研ぎ澄まし、内なる導きに従うことで、あなた本来の使命に気づくことができます。`;
-    }
-    
-    return result;
-}
-
-/**
- * ランダムな特殊能力/才能を返す関数
- * @returns {string} - ランダムな能力/才能
- */
-function getRandomTalent() {
-    const talents = [
-        "霊感や透視能力",
-        "創造的な芸術表現",
-        "癒しや共感の力",
-        "直観的な問題解決能力",
-        "人々を導く指導力",
-        "自然界と調和する能力",
-        "言葉や文章の力",
-        "未来を予知する力",
-        "人の心を読み取る能力",
-        "宇宙の法則を理解する知恵"
-    ];
-    
-    return talents[Math.floor(Math.random() * talents.length)];
-}
 
 /**
  * スピリットパーティクルのアニメーション効果を強化
@@ -289,8 +218,9 @@ function enhanceSpiritParticles(container, intense = false) {
  * @returns {Promise<void>}
  */
 async function displayTarotInterpretation() {
-    // プレミアムユーザーのみが使用可能
-    if (localStorage.getItem('isPremiumUser') !== 'true') {
+    // 現在のセッションで課金済みかチェック
+    if (sessionStorage.getItem('currentSessionPaid') !== 'true') {
+        // 未課金の場合は課金モーダルを表示して処理終了
         showPremiumModal();
         return;
     }
@@ -437,6 +367,12 @@ async function getDeepInterpretation(selectedCards, dream, textElement) {
             // 解釈完了時の音響効果
             playMysticSound('complete');
             
+            // 最下部の「別の夢を霊視する」ボタンを表示
+            const bottomResetButton = document.querySelector('.bottom-reset-button');
+            if (bottomResetButton) {
+                bottomResetButton.style.display = 'flex';
+            }
+            
         } catch (deepError) {
             console.error('Deep interpretation error:', deepError);
             
@@ -453,42 +389,13 @@ async function getDeepInterpretation(selectedCards, dream, textElement) {
 
 /**
  * 夢の内容から象徴を分析する簡易関数
+ * 注意: この関数はtarot.jsのanalyzeSymbolsを使用するように変更されました
  * @param {string} dreamText - 夢の内容
  * @returns {Array<string>} - 検出された象徴
  */
 function analyzeSymbols(dreamText) {
-    const symbolPatterns = {
-        '水': ['水', '海', '川', '湖', '雨', '泳ぐ', '流れ', '波'],
-        '空': ['空', '飛ぶ', '雲', '鳥', '風', 'ジャンプ', '高い'],
-        '火': ['火', '炎', '燃える', '熱い', '太陽', '明るい'],
-        '地': ['地面', '山', '土', '石', '洞窟', '森', '木'],
-        '光': ['光', '輝く', '明るい', 'まぶしい', '太陽', '星'],
-        '闇': ['闇', '暗い', '影', '夜', '黒い', '恐怖'],
-        '扉': ['扉', 'ドア', '入口', '出口', '通路', '開く', '閉じる'],
-        '旅': ['旅', '道', '歩く', '移動', '車', '電車', '飛行機'],
-        '追跡': ['追いかける', '逃げる', '走る', '恐怖', '隠れる'],
-        '変身': ['変身', '変わる', '姿', '違う', '別人'],
-        '上昇': ['上がる', '昇る', '階段', '山', '高い', '空'],
-        '下降': ['下がる', '落ちる', '深い', '穴', '地下'],
-        '人間関係': ['友人', '恋人', '家族', '父', '母', '兄', '姉', '弟', '妹', '子供', '会話'],
-        '探索': ['探す', '見つける', '迷う', '道', '地図', '謎']
-    };
-    
-    const detectedSymbols = [];
-    
-    // 各象徴パターンを検索
-    for (const [symbol, patterns] of Object.entries(symbolPatterns)) {
-        if (patterns.some(pattern => dreamText.includes(pattern))) {
-            detectedSymbols.push(symbol);
-        }
-    }
-    
-    // 象徴が見つからなかった場合のデフォルト
-    if (detectedSymbols.length === 0) {
-        return ['潜在意識', '内なる声', '精神的な旅'];
-    }
-    
-    return detectedSymbols;
+    // tarot.jsで定義された関数を使用
+    return ['潜在意識', '内なる声', '精神的な旅'];
 }
 
 /**
@@ -596,17 +503,7 @@ function showWelcomeGuide() {
  * プレミアム課金モーダルを表示する関数
  */
 function showPremiumModal() {
-    // 既に課金済みの場合はタロット選択セクションを表示
-    if (localStorage.getItem('isPremiumUser') === 'true') {
-        const tarotSelection = document.querySelector('.tarot-selection');
-        if (tarotSelection) {
-            tarotSelection.style.display = 'block';
-            tarotSelection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-        return;
-    }
-    
-    // 未課金ユーザーの場合は課金モーダルを表示
+    // 常にプレミアム課金モーダルを表示する（毎回課金が必要）
     const premiumModal = document.getElementById('premiumModal');
     if (premiumModal) {
         // プレミアム機能リストを動的に生成
@@ -637,6 +534,7 @@ function showPremiumModal() {
         // 神秘的な音を再生
         playMysticSound('premium');
     }
+    return;
 }
 
 /**
@@ -644,6 +542,15 @@ function showPremiumModal() {
  */
 function initApp() {
     console.log('アプリケーションを初期化中...');
+    
+    // URLパラメータで決済完了のチェック
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    const success = urlParams.get('success');
+    
+    if (sessionId && success === 'true') {
+        console.log('決済完了後のリダイレクトを検出しました');
+    }
     
     // DOM要素の取得とデバッグ
     const dreamInput = document.getElementById('dreamInput');
@@ -703,6 +610,10 @@ function initApp() {
     if (tarotSelection) tarotSelection.style.display = 'none';
     if (tarotInterpretation) tarotInterpretation.style.display = 'none';
     if (shareSection) shareSection.style.display = 'none';
+    
+    // 別の夢を霊視するボタンの非表示（初期状態）
+    const bottomResetButton = document.querySelector('.bottom-reset-button');
+    if (bottomResetButton) bottomResetButton.style.display = 'none';
     
     // スピリットパーティクルの初期化
     const spiritParticlesContainer = document.querySelector('.spirit-particles');
@@ -766,6 +677,11 @@ function initApp() {
                 return;
             }
             
+            // 霊視ボタンを非表示にする
+            if (psychicButton) {
+                psychicButton.style.display = 'none';
+            }
+            
             // ローディング表示
             if (loadingSection) {
                 loadingSection.style.display = 'flex';
@@ -793,8 +709,8 @@ function initApp() {
             }
             
             try {
-                // 霊視結果の生成
-                const isPremium = localStorage.getItem('isPremiumUser') === 'true';
+                // 霊視結果の生成（現在のセッションで課金済みかチェック）
+                const isPremium = sessionStorage.getItem('currentSessionPaid') === 'true';
                 const psychicReading = await generatePsychicReading(dream, isPremium);
                 
                 // ローディングを非表示、結果を表示
@@ -822,9 +738,28 @@ function initApp() {
                     shareSection.style.display = 'flex';
                 }
                 
-                // 課金済みユーザーの場合はタロット選択も自動表示
-                if (isPremium && tarotSelection) {
-                    tarotSelection.style.display = 'block';
+                // 最下部の「別の夢を霊視する」ボタンを表示
+                const bottomResetButton = document.querySelector('.bottom-reset-button');
+                if (bottomResetButton) {
+                    bottomResetButton.style.display = 'flex';
+                }
+                
+                // 現在のセッションで課金済みの場合のみタロット選択を表示
+                if (sessionStorage.getItem('currentSessionPaid') === 'true') {
+                    // より深い霊視ボタンを非表示にする
+                    if (premiumButtonInResult) {
+                        premiumButtonInResult.style.display = 'none';
+                    }
+                    
+                    // タロット選択を自動表示
+                    if (tarotSelection) {
+                        tarotSelection.style.display = 'block';
+                    }
+                } else {
+                    // 未課金の場合は「より深い霊視」ボタンを表示
+                    if (premiumButtonInResult) {
+                        premiumButtonInResult.style.display = 'block';
+                    }
                 }
                 
                 // 結果までスクロール
@@ -866,6 +801,84 @@ function initApp() {
         console.error('psychicButton要素が見つかりません');
     }
     
+    // 別の夢を霊視するボタンの機能を実装する関数
+    function resetDreamReading() {
+        console.log('別の夢を霊視するボタンがクリックされました');
+        
+        // 課金状態をリセット（毎回課金が必要なため）
+        sessionStorage.removeItem('currentSessionPaid');
+        
+        // 結果セクションを非表示
+        if (resultSection) {
+            resultSection.style.display = 'none';
+        }
+        
+        // タロット選択セクションを非表示
+        if (tarotSelection) {
+            tarotSelection.style.display = 'none';
+        }
+        
+        // タロット解釈を非表示
+        const tarotInterpretation = document.querySelector('.tarot-interpretation');
+        if (tarotInterpretation) {
+            tarotInterpretation.style.display = 'none';
+        }
+        
+        // シェアセクションを非表示
+        if (shareSection) {
+            shareSection.style.display = 'none';
+        }
+        
+        // 最下部の「別の夢を霊視する」ボタンを非表示
+        const bottomResetButton = document.querySelector('.bottom-reset-button');
+        if (bottomResetButton) {
+            bottomResetButton.style.display = 'none';
+        }
+        
+        // 夢入力欄をクリア
+        if (dreamInput) {
+            dreamInput.value = '';
+        }
+        
+        // 霊視ボタンを再表示
+        if (psychicButton) {
+            psychicButton.style.display = 'block';
+        }
+        
+        // プレミアムボタンを再表示（新しいセッションで再度課金が必要）
+        const premiumButtonInResult = document.getElementById('premiumButtonInResult');
+        if (premiumButtonInResult) {
+            premiumButtonInResult.style.display = 'block';
+        }
+        
+        // 初期の入力画面までスクロール
+        const dreamInputCard = document.querySelector('.dream-input-card');
+        if (dreamInputCard) {
+            dreamInputCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // 選択されたタロットカードの選択を解除
+        const selectedCards = document.querySelectorAll('.tarot-card.selected');
+        selectedCards.forEach(card => {
+            card.classList.remove('selected');
+            const cardContent = card.querySelector('.tarot-card-content');
+            if (cardContent) {
+                cardContent.style.transform = '';
+            }
+        });
+    }
+    
+    // 「別の夢を霊視する」ボタンのイベントリスナーを設定
+    const resetButtonInResult = document.getElementById('resetButtonInResult');
+    if (resetButtonInResult) {
+        resetButtonInResult.addEventListener('click', resetDreamReading);
+    }
+    
+    const resetButtonBottom = document.getElementById('resetButtonBottom');
+    if (resetButtonBottom) {
+        resetButtonBottom.addEventListener('click', resetDreamReading);
+    }
+    
     // プレミアムボタンのイベント設定
     if (premiumButton) {
         premiumButton.addEventListener('click', showPremiumModal);
@@ -891,15 +904,43 @@ function initApp() {
             });
         }
         
-        // 課金確認ボタン
-        if (confirmPremium) {
-            confirmPremium.addEventListener('click', () => {
-                // モーダルを非表示
-                premiumModal.style.display = 'none';
+        // Stripe決済関連の変数
+        let stripePromise = null;
+        let stripeElements = null;
+        let stripePaymentElement = null;
+        
+        // Stripeオブジェクトの初期化
+        async function initializeStripe() {
+            try {
+                // 公開キーをサーバーから取得
+                const response = await fetch('/api/payment/config');
+                if (!response.ok) {
+                    throw new Error('決済システムの設定取得に失敗しました');
+                }
                 
-                // 神秘的な音を再生
-                playMysticSound('payment');
+                const { publishableKey } = await response.json();
+                if (!publishableKey) {
+                    throw new Error('Stripe公開キーが見つかりません');
+                }
                 
+                // Stripeオブジェクトを初期化
+                stripePromise = Stripe(publishableKey);
+                console.log('Stripeを初期化しました');
+                return true;
+            } catch (error) {
+                console.error('Stripe初期化エラー:', error);
+                const paymentError = document.getElementById('payment-error');
+                if (paymentError) {
+                    paymentError.textContent = `決済システムの初期化に失敗しました: ${error.message}`;
+                    paymentError.style.display = 'block';
+                }
+                return false;
+            }
+        }
+        
+        // 決済セッションを作成
+        async function createCheckoutSession() {
+            try {
                 // 支払い処理中モーダルを表示
                 const paymentProcessingModal = document.getElementById('paymentProcessingModal');
                 if (paymentProcessingModal) {
@@ -912,33 +953,136 @@ function initApp() {
                     }
                 }
                 
-                // 支払い処理のシミュレーション（実際の実装では決済APIを使用）
-                setTimeout(() => {
-                    // 支払い処理中モーダルを非表示
-                    if (paymentProcessingModal) {
-                        paymentProcessingModal.style.display = 'none';
+                // APIからセッションURLを取得
+                const response = await fetch('/api/payment/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('決済セッションの作成に失敗しました');
+                }
+                
+                const { url } = await response.json();
+                
+                // Stripeのチェックアウトページにリダイレクト
+                window.location.href = url;
+            } catch (error) {
+                console.error('決済セッション作成エラー:', error);
+                
+                // 支払い処理中モーダルを非表示
+                const paymentProcessingModal = document.getElementById('paymentProcessingModal');
+                if (paymentProcessingModal) {
+                    paymentProcessingModal.style.display = 'none';
+                }
+                
+                // エラーメッセージを表示
+                const paymentError = document.getElementById('payment-error');
+                if (paymentError) {
+                    paymentError.textContent = `決済処理中にエラーが発生しました: ${error.message}`;
+                    paymentError.style.display = 'block';
+                }
+            }
+        }
+        
+        // 決済成功処理
+        function handlePaymentSuccess(sessionId) {
+            // 一時的に利用可能としてセッションフラグを設定
+            sessionStorage.setItem('currentSessionPaid', 'true');
+            sessionStorage.setItem('paymentSessionId', sessionId);
+            
+            // 神秘的な音を再生（成功）
+            playMysticSound('success');
+            
+            // より深い霊視ボタンを非表示にする
+            const premiumButtonInResult = document.getElementById('premiumButtonInResult');
+            if (premiumButtonInResult) {
+                premiumButtonInResult.style.display = 'none';
+            }
+            
+            // 支払い成功モーダルを表示
+            const paymentSuccessModal = document.getElementById('paymentSuccessModal');
+            if (paymentSuccessModal) {
+                paymentSuccessModal.style.display = 'flex';
+                
+                // 成功マークのアニメーション
+                const successMark = paymentSuccessModal.querySelector('.success-mark');
+                if (successMark) {
+                    successMark.style.animation = 'pulse 1.5s ease-in-out infinite';
+                }
+            }
+        }
+        
+        // リダイレクト後のセッションID（URLパラメータ）をチェック
+        function checkSessionFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session_id');
+            const success = urlParams.get('success');
+            
+            if (sessionId && success === 'true') {
+                // URLからパラメータを削除（履歴に残さない）
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                // 決済セッションの状態を確認
+                verifyPaymentSession(sessionId);
+            }
+        }
+        
+        // 決済セッションの状態を確認
+        async function verifyPaymentSession(sessionId) {
+            try {
+                const response = await fetch(`/api/payment/checkout-session/${sessionId}`);
+                if (!response.ok) {
+                    throw new Error('決済セッションの検証に失敗しました');
+                }
+                
+                const { status } = await response.json();
+                console.log(`決済ステータス: ${status}`);
+                
+                if (status === 'paid' || status === 'complete') {
+                    // 決済成功処理
+                    handlePaymentSuccess(sessionId);
+                }
+            } catch (error) {
+                console.error('決済検証エラー:', error);
+            }
+        }
+        
+        // 課金確認ボタン
+        if (confirmPremium) {
+            confirmPremium.addEventListener('click', async () => {
+                // モーダルを非表示
+                premiumModal.style.display = 'none';
+                
+                // 神秘的な音を再生
+                playMysticSound('payment');
+                
+                // エラーメッセージをクリア
+                const paymentError = document.getElementById('payment-error');
+                if (paymentError) {
+                    paymentError.style.display = 'none';
+                }
+                
+                // Stripe初期化（初回のみ）
+                if (!stripePromise) {
+                    const initialized = await initializeStripe();
+                    if (!initialized) {
+                        return;
                     }
-                    
-                    // 課金完了フラグを保存
-                    localStorage.setItem('isPremiumUser', 'true');
-                    
-                    // 神秘的な音を再生（成功）
-                    playMysticSound('success');
-                    
-                    // 支払い成功モーダルを表示
-                    const paymentSuccessModal = document.getElementById('paymentSuccessModal');
-                    if (paymentSuccessModal) {
-                        paymentSuccessModal.style.display = 'flex';
-                        
-                        // 成功マークのアニメーション
-                        const successMark = paymentSuccessModal.querySelector('.success-mark');
-                        if (successMark) {
-                            successMark.style.animation = 'pulse 1.5s ease-in-out infinite';
-                        }
-                    }
-                }, 2500);
+                }
+                
+                // Checkoutセッションを作成
+                createCheckoutSession();
             });
         }
+        
+        // ページロード時にURLパラメータをチェック
+        checkSessionFromUrl();
     }
     
     // 支払い成功後のタロット選択へ進むボタン
@@ -949,6 +1093,12 @@ function initApp() {
             const paymentSuccessModal = document.getElementById('paymentSuccessModal');
             if (paymentSuccessModal) {
                 paymentSuccessModal.style.display = 'none';
+            }
+            
+            // より深い霊視ボタンを非表示にする（このセッションで既に支払い済み）
+            const premiumButtonInResult = document.getElementById('premiumButtonInResult');
+            if (premiumButtonInResult) {
+                premiumButtonInResult.style.display = 'none';
             }
             
             // タロットカード選択を表示
@@ -966,9 +1116,9 @@ function initApp() {
         
         if (!tarotCard) return;
         
-        // プレミアムユーザーチェック
-        if (localStorage.getItem('isPremiumUser') !== 'true') {
-            // 未課金ユーザーの場合は課金モーダルを表示して処理終了
+        // 現在のセッションで課金済みかチェック
+        if (sessionStorage.getItem('currentSessionPaid') !== 'true') {
+            // 未課金の場合は課金モーダルを表示して処理終了
             showPremiumModal();
             return;
         }

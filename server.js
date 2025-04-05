@@ -5,6 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const dotenv = require('dotenv');
 const OpenAI = require('openai');
+const stripe = require('stripe');
 
 // 環境変数の読み込み
 dotenv.config();
@@ -24,10 +25,24 @@ if (!apiKey || apiKey.trim() === '') {
   });
 }
 
+// Stripe初期化
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+let stripeClient;
+
+if (!stripeSecretKey || stripeSecretKey.trim() === '') {
+  console.warn('警告: STRIPE_SECRET_KEYが設定されていません。決済機能は無効化されます。');
+} else {
+  stripeClient = stripe(stripeSecretKey);
+  console.log('Stripe決済機能が有効化されました');
+}
+
 // ミドルウェア
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '/')));
+
+// Stripeウェブフックのためのrawボディを取得
+app.use('/api/webhook', express.raw({type: 'application/json'}));
 
 // メインページのルート
 app.get('/', (req, res) => {
@@ -158,6 +173,107 @@ app.post('/api/dream-interpretation', async (req, res) => {
   } catch (error) {
     console.error('API処理エラー:', error);
     res.status(500).json({ error: 'タロット解釈中にエラーが発生しました' });
+  }
+});
+
+// Stripe決済関連のエンドポイント
+// 公開キーを取得するエンドポイント
+app.get('/api/payment/config', (req, res) => {
+  res.json({
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+    premiumPrice: 500  // 価格は円単位で
+  });
+});
+
+// 決済セッションを作成するエンドポイント
+app.post('/api/payment/create-checkout-session', async (req, res) => {
+  try {
+    if (!stripeClient) {
+      return res.status(500).json({ error: 'Stripe決済機能が無効です' });
+    }
+
+    const priceId = process.env.STRIPE_PREMIUM_PRICE_ID;
+    if (!priceId) {
+      return res.status(500).json({ error: '商品価格IDが設定されていません' });
+    }
+
+    // セッションの作成
+    const session = await stripeClient.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${req.protocol}://${req.get('host')}?session_id={CHECKOUT_SESSION_ID}&success=true`,
+      cancel_url: `${req.protocol}://${req.get('host')}?canceled=true`,
+      metadata: {
+        type: 'premium_psychic_reading',
+      },
+    });
+
+    res.json({ id: session.id, url: session.url });
+  } catch (error) {
+    console.error('Stripeセッション作成エラー:', error);
+    res.status(500).json({ error: '決済セッションの作成に失敗しました' });
+  }
+});
+
+// 決済セッションの状態を確認するエンドポイント
+app.get('/api/payment/checkout-session/:sessionId', async (req, res) => {
+  try {
+    if (!stripeClient) {
+      return res.status(500).json({ error: 'Stripe決済機能が無効です' });
+    }
+
+    const { sessionId } = req.params;
+    const session = await stripeClient.checkout.sessions.retrieve(sessionId);
+    
+    res.json({ status: session.payment_status, session });
+  } catch (error) {
+    console.error('セッション取得エラー:', error);
+    res.status(500).json({ error: '決済セッションの取得に失敗しました' });
+  }
+});
+
+// 決済完了ウェブフックエンドポイント
+app.post('/api/webhook', async (req, res) => {
+  try {
+    if (!stripeClient) {
+      return res.status(500).json({ error: 'Stripe決済機能が無効です' });
+    }
+
+    const sig = req.headers['stripe-signature'];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error('Webhookシークレットが設定されていません');
+      return res.status(500).json({ error: 'Webhookシークレットが設定されていません' });
+    }
+
+    let event;
+    try {
+      event = stripeClient.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } catch (err) {
+      console.error(`Webhook署名検証エラー: ${err.message}`);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // イベント処理
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      console.log(`決済成功: ${session.id}`);
+      
+      // ここに決済成功時の処理を実装
+      // 例: ユーザー情報の更新、特典の付与など
+    }
+
+    res.json({received: true});
+  } catch (error) {
+    console.error('Webhookエラー:', error);
+    res.status(500).json({ error: 'Webhookの処理に失敗しました' });
   }
 });
 

@@ -875,6 +875,12 @@ header {
     display: none;
 }
 
+/* 最下部の「別の夢を霊視する」ボタン */
+.bottom-reset-button {
+    margin-top: 40px;
+    margin-bottom: 20px;
+}
+
 .share-text {
     font-size: 1rem;
     margin-bottom: 15px;
@@ -1008,6 +1014,14 @@ header {
     line-height: 1.6;
     margin-bottom: 25px;
     text-align: center;
+}
+
+.highlight-text {
+    color: var(--warning-color);
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+    font-size: 0.9rem;
 }
 
 .modal-buttons {
@@ -1309,4 +1323,35 @@ footer {
     .symbol-map {
         height: 180px;
     }
+}
+
+/* Stripe決済フォーム用のスタイル */
+.payment-form-container {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    border: 1px solid rgba(138, 43, 226, 0.3);
+}
+
+/* Stripeフォーム用スタイル */
+#stripe-payment-element-container {
+    color: #fff;
+}
+
+#stripe-payment-element-container .StripeElement {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.payment-error {
+    text-align: center;
+    padding: 10px;
+    background-color: rgba(255, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: #ff6b6b;
 }

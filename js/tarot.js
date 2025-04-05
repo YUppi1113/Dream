@@ -381,7 +381,7 @@ export async function generateDreamDeepInterpretation(card1, card2, dream) {
             return `タロットカード「${tarot1.name}」と「${tarot2.name}」からの深層解釈を行うには、より詳しい夢の内容が必要です。夢の内容を詳しく入力していただくことで、より正確な霊視を提供できます。`;
         }
 
-        // 本番環境: ChatGPT APIを使用
+        // ChatGPT APIを使用
         try {
             const response = await fetch('/api/dream-interpretation', {
                 method: 'POST',
@@ -401,13 +401,12 @@ export async function generateDreamDeepInterpretation(card1, card2, dream) {
                 const data = await response.json();
                 return formatDeepInterpretation(data.interpretation);
             }
+            
+            throw new Error('APIからの応答が正常ではありません');
         } catch (apiError) {
             console.error('API呼び出しエラー:', apiError);
-            // APIエラー時はローカル生成にフォールバック
+            return '【API接続エラー】\n\n申し訳ありません。タロット解釈サーバーとの接続に問題が発生しました。インターネット接続を確認し、しばらくしてから再度お試しください。';
         }
-        
-        // フォールバック: 詳細な解釈を生成（ローカル）
-        return generateEnhancedLocalInterpretation(tarot1, tarot2, dream);
     } catch (error) {
         console.error('解釈生成エラー:', error);
         return '夢の深層解釈の生成中にエラーが発生しました。後ほど再度お試しください。';
@@ -454,70 +453,6 @@ function formatDeepInterpretation(interpretation) {
     return formatted;
 }
 
-/**
- * 強化されたローカル解釈を生成する関数（APIフォールバック）
- * @param {Object} tarot1 - 1枚目のカード情報
- * @param {Object} tarot2 - 2枚目のカード情報
- * @param {string} dream - 夢の内容
- * @returns {string} - 生成された解釈
- */
-function generateEnhancedLocalInterpretation(tarot1, tarot2, dream) {
-    // 夢のキーワードを抽出
-    const keywords = extractKeywords(dream);
-    
-    // 夢の象徴性を分析
-    const dreamSymbols = analyzeSymbols(dream);
-    
-    // 星空の区切り線
-    const starDivider = "✧･ﾟ: *✧･ﾟ:* *:･ﾟ✧*:･ﾟ✧";
-    
-    // 解釈テキストの生成
-    let interpretation = `✨ 【霊視者からの特別メッセージ】 ✨\n\n`;
-    
-    // 導入部
-    interpretation += `あなたが選んだ「${tarot1.name}」と「${tarot2.name}」の神秘的な組み合わせは、夢の深層に秘められた重要なメッセージを示しています。これらのカードのエネルギーは、あなたの潜在意識と強く共鳴しています。\n\n`;
-    
-    interpretation += `${starDivider}\n\n🔮 【夢の象徴の解読】 🔮\n\n`;
-    
-    // 夢の象徴分析
-    interpretation += `あなたの夢には${dreamSymbols.join('、')}といった象徴が現れています。これらは${keywords.slice(0, 3).join('、')}といったテーマと深く結びついており、あなたの潜在意識からの重要なメッセージです。\n\n`;
-    interpretation += `特に${dreamSymbols[0] || '象徴'}は、あなたの精神世界と現実世界の境界線が薄れていることを示しています。霊的な次元からの導きに耳を傾けるべき時かもしれません。\n\n`;
-    
-    interpretation += `${starDivider}\n\n💫 【カードと夢の共鳴】 💫\n\n`;
-    
-    // カードと夢の関連性
-    interpretation += `「${tarot1.name}」のエネルギーは、あなたの${getRandomInsight(tarot1.name)}を強く示唆しています。夢の中の${keywords[0] || '象徴'}は、この側面があなたの現実生活においても重要な役割を果たすことを教えています。\n\n`;
-    interpretation += `一方、「${tarot2.name}」の影響は、${getRandomInsight(tarot2.name)}という側面を照らし出しています。特に、夢の中の${keywords[1] || '要素'}は、あなたの${getCardAttribute(tarot2.name)}に関連するメッセージです。\n\n`;
-    interpretation += `これら二つのカードが同時に現れたことは、あなたが人生の重要な分岐点に立っていることを示しています。決断と行動の時が来ているのです。\n\n`;
-    
-    interpretation += `${starDivider}\n\n💎 【未来へのガイダンス】 💎\n\n`;
-    
-    // アドバイスと未来への指針
-    interpretation += `この夢からの学びとして、${getAdvice(tarot1.name, tarot2.name)}ことを意識してみてください。\n\n`;
-    interpretation += `近い将来、${dreamSymbols[0] || '象徴'}に関連した重要な出来事があなたを待っています。その時、この夢とタロットのメッセージを思い出し、直感に従って行動することで、より良い未来への道が開けるでしょう。\n\n`;
-    interpretation += `日常生活の中で${dreamSymbols[1] || '象徴'}に出会ったとき、それはこの夢のメッセージを思い出すためのサインです。そのサインを見逃さないよう、常に意識を高く保ちましょう。\n\n`;
-    
-    // 結び
-    interpretation += `このタロット霊視の結果は、あなたのより深い自己理解と成長のための一つの視点です。最終的な判断は、常にあなた自身の直感と知恵に委ねられています。内なる声に耳を傾け、自分自身の真実の道を歩んでください。`;
-    
-    return interpretation;
-}
-
-/**
- * 夢の内容からキーワードを抽出する関数
- * @param {string} dreamText - 夢の内容
- * @returns {Array<string>} - 抽出されたキーワード
- */
-function extractKeywords(dreamText) {
-    // 簡易的なキーワード抽出
-    const commonWords = ['私', 'が', 'を', 'に', 'は', 'の', 'と', 'た', 'です', 'ます', 'ました', 'でした', 'ている', 'いる', 'ある', 'れる'];
-    const words = dreamText.split(/[\s,。、！？!?]+/).filter(word => 
-        word.length > 1 && !commonWords.includes(word) && !/^\d+$/.test(word)
-    );
-    
-    // ユニークなキーワードを最大10個返す
-    return [...new Set(words)].slice(0, 10);
-}
 
 /**
  * 夢の内容から象徴を分析する関数
@@ -559,200 +494,6 @@ function analyzeSymbols(dreamText) {
     }
     
     return detectedSymbols;
-}
-
-/**
- * カードに基づいたランダムな洞察を生成
- * @param {string} cardName - カード名
- * @returns {string} - 生成された洞察
- */
-function getRandomInsight(cardName) {
-    const insights = {
-        "愚者": [
-            "無限の可能性への開かれた心",
-            "新しいサイクルの始まり",
-            "自由で束縛されない精神",
-            "冒険への準備と期待",
-            "未知の領域への一歩"
-        ],
-        "魔術師": [
-            "創造力と意志の力",
-            "自分の能力を最大限に活用する必要性",
-            "思考が現実を形作る力",
-            "意識的な行動の重要性",
-            "潜在能力の覚醒と活用"
-        ],
-        "女教皇": [
-            "直感的な知恵と内なる声",
-            "表面下に隠れた真実",
-            "静かな内省の必要性",
-            "潜在意識からのメッセージ",
-            "神秘的な知識への探求"
-        ],
-        "女帝": [
-            "創造性と豊かさの源",
-            "感情の豊かさと表現",
-            "育み育てる力",
-            "自然との調和とつながり",
-            "豊穣と実りの時期"
-        ],
-        "皇帝": [
-            "権威と責任の受容",
-            "構造と秩序の重要性",
-            "目標達成のための計画",
-            "自己規律と意志の力",
-            "現実的な視点の必要性"
-        ],
-        "教皇": [
-            "精神的な知恵と指導",
-            "伝統的な価値観の重要性",
-            "信念体系の探求",
-            "内なる教師との対話",
-            "高次の知識への導き"
-        ],
-        "恋人": [
-            "本質的な選択の時",
-            "深い人間関係の構築",
-            "自己と他者のバランス",
-            "心からの愛と調和",
-            "真実の価値への気づき"
-        ],
-        "戦車": [
-            "意志力による前進",
-            "相反する力のコントロール",
-            "困難に打ち勝つ決意",
-            "自己主張と行動力",
-            "目標への揺るぎない集中"
-        ],
-        "力": [
-            "内なる力と勇気",
-            "情熱の穏やかなコントロール",
-            "忍耐と持続力",
-            "優しさを伴う強さ",
-            "本能と理性のバランス"
-        ],
-        "隠者": [
-            "内なる光を見つける旅",
-            "孤独を通じた自己発見",
-            "静かな知恵の探求",
-            "内省と精神的成長",
-            "真の自己との対話"
-        ],
-        "塔": [
-            "古い構造や信念の崩壊",
-            "突然の啓示や気づき",
-            "予期せぬ変化への対応",
-            "真の自己への目覚め",
-            "解放と再生の機会"
-        ]
-    };
-    
-    // カード別の洞察がある場合はランダムに選択
-    if (insights[cardName]) {
-        return insights[cardName][Math.floor(Math.random() * insights[cardName].length)];
-    }
-    
-    // 汎用的な洞察のリスト
-    const genericInsights = [
-        "内面的な成長と変化",
-        "人生の重要な転機",
-        "精神的な気づきの過程",
-        "潜在意識からの重要なメッセージ",
-        "過去の経験から学ぶ機会",
-        "未来への新たな道筋",
-        "隠された才能や可能性",
-        "魂の目的への気づき",
-        "宇宙からの神秘的なガイダンス",
-        "精神と物質の調和"
-    ];
-    
-    return genericInsights[Math.floor(Math.random() * genericInsights.length)];
-}
-
-/**
- * カードの属性を取得
- * @param {string} cardName - カード名
- * @returns {string} - カードの属性
- */
-function getCardAttribute(cardName) {
-    const attributes = {
-        "愚者": "直感と冒険心",
-        "魔術師": "創造力と意志",
-        "女教皇": "直感と内なる知恵",
-        "女帝": "感情の豊かさと創造性",
-        "皇帝": "構造と秩序",
-        "教皇": "精神性と信念",
-        "恋人": "関係性と選択",
-        "戦車": "意志力と勝利",
-        "力": "内なる強さと忍耐",
-        "隠者": "内省と自己探求",
-        "運命の輪": "変化と運命",
-        "正義": "バランスと公正",
-        "吊るされた男": "視点の転換と受容",
-        "死神": "変容と再生",
-        "節制": "調和と癒し",
-        "悪魔": "執着と制限",
-        "塔": "啓示と解放",
-        "星": "希望と導き",
-        "月": "幻想と潜在意識",
-        "太陽": "活力と成功",
-        "審判": "覚醒と復活",
-        "世界": "完成と達成"
-    };
-    
-    return attributes[cardName] || "精神的な成長";
-}
-
-/**
- * カードの組み合わせに基づいたアドバイスを生成
- * @param {string} card1 - 1枚目のカード名
- * @param {string} card2 - 2枚目のカード名
- * @returns {string} - 生成されたアドバイス
- */
-function getAdvice(card1, card2) {
-    const specificAdvice = {
-        "愚者+魔術師": "自由な発想と創造力を活かして新しいプロジェクトに取り組む",
-        "愚者+女教皇": "直感を信じて、従来の常識にとらわれない新しい道を探る",
-        "愚者+女帝": "感情の豊かさを大切にしながら、新たな創造的表現を探求する",
-        "愚者+塔": "古い枠組みを手放し、自分らしい生き方を再定義する",
-        "魔術師+星": "自分の意図と願いを明確にし、それを実現するための具体的な行動を取る",
-        "女教皇+月": "夢や直感からのメッセージに耳を傾け、内なる真実を探求する",
-        "塔+太陽": "困難な変化を乗り越え、新たな喜びと成功に向かって前進する",
-        "戦車+力": "内なる強さと外的な決断力をバランスよく使い、障害を乗り越える",
-        "隠者+世界": "内なる探求を通じて得た知恵を、より広い世界で共有し実践する",
-        "死神+星": "古いパターンを手放し、新たな希望と可能性に心を開く",
-        "皇帝+正義": "公正さと秩序のバランスを保ちながら、責任ある決断を下す",
-        "恋人+太陽": "本当の自分を表現しながら、真の愛と喜びを追求する",
-        "悪魔+審判": "自分を縛る執着や恐れに気づき、より高い意識へと目覚める"
-    };
-    
-    // 特定の組み合わせのアドバイスがある場合
-    const combo1 = `${card1}+${card2}`;
-    const combo2 = `${card2}+${card1}`;
-    
-    if (specificAdvice[combo1]) {
-        return specificAdvice[combo1];
-    } else if (specificAdvice[combo2]) {
-        return specificAdvice[combo2];
-    }
-    
-    // 汎用的なアドバイス
-    const genericAdvice = [
-        "内なる声に耳を傾け、直感を信じて行動する",
-        "変化を恐れずに受け入れ、新たな可能性に心を開く",
-        "過去の経験から学びながらも、未来に向かって前進する",
-        "自分の強みと弱みを理解し、バランスのとれた判断をする",
-        "感情と理性のバランスを取りながら、重要な決断に臨む",
-        "困難な状況でも希望を持ち続け、内なる光を信じる",
-        "人間関係において、より深いレベルでの理解と共感を求める",
-        "自分の真の目的と価値観に従って行動する",
-        "創造性と直感を日常生活に取り入れる",
-        "精神的な成長と物質的な豊かさのバランスを大切にする",
-        "恐れを超えて、愛と思いやりから行動する",
-        "すべてのことに意味があると信じ、人生の流れを受け入れる"
-    ];
-    
-    return genericAdvice[Math.floor(Math.random() * genericAdvice.length)];
 }
 
 /**

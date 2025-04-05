@@ -10,6 +10,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Yuji+Syuku&display=swap" rel="stylesheet">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
+    
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
     <!-- 背景の星空効果 -->
@@ -47,11 +50,6 @@
                         <span class="button-text">霊視を開始する</span>
                         <span class="button-glow"></span>
                     </button>
-                    <button id="premiumButton" class="premium-button">
-                        <span class="button-text">より深い霊視</span>
-                        <span class="price-tag">¥500</span>
-                        <span class="button-glow"></span>
-                    </button>
                 </div>
             </div>
         </div>
@@ -76,6 +74,10 @@
                     <button id="premiumButtonInResult" class="premium-button">
                         <span class="button-text">より深い霊視</span>
                         <span class="price-tag">¥500</span>
+                        <span class="button-glow"></span>
+                    </button>
+                    <button id="resetButtonInResult" class="glow-button">
+                        <span class="button-text">別の夢を霊視する</span>
                         <span class="button-glow"></span>
                     </button>
                 </div>
@@ -116,6 +118,14 @@
                     <!-- SNSシェアボタンはJavaScriptで生成 -->
                 </div>
             </div>
+            
+            <!-- 別の夢を霊視するボタン（最下部） -->
+            <div class="button-container bottom-reset-button">
+                <button id="resetButtonBottom" class="glow-button">
+                    <span class="button-text">別の夢を霊視する</span>
+                    <span class="button-glow"></span>
+                </button>
+            </div>
         </div>
     </div>
     
@@ -126,7 +136,7 @@
             <button class="close-button">&times;</button>
             <h2 class="modal-title">プレミアム霊視</h2>
             <div class="modal-decoration"></div>
-            <p class="modal-text">より深い霊視を受けるには、¥500の支払いが必要です。この特別な霊視では、タロットカードを用いてあなたの夢の隠された意味をより詳しく解読します。</p>
+            <p class="modal-text">より深い霊視を受けるには、¥500の支払いが必要です。この特別な霊視では、タロットカードを用いてあなたの夢の隠された意味をより詳しく解読します。<span class="highlight-text">※プレミアム霊視は都度課金制です。新しい夢の霊視ごとにお支払いが必要となります。</span></p>
             <div class="premium-features">
                 <div class="feature">
                     <div class="feature-icon">✧</div>
@@ -156,6 +166,34 @@
                     <span class="button-glow"></span>
                 </button>
             </div>
+            <!-- エラーメッセージ表示用 -->
+            <div id="payment-error" class="payment-error" style="display: none; color: red; margin-top: 15px;"></div>
+        </div>
+    </div>
+    
+    <!-- Stripe決済モーダル -->
+    <div class="modal" id="stripePaymentModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="close-button" id="closeStripeModal">&times;</button>
+            <h2 class="modal-title">安全なお支払い</h2>
+            <div class="modal-decoration"></div>
+            <p class="modal-text">Stripeによる安全な決済システムで支払いを処理します。以下のフォームにクレジットカード情報を入力してください。</p>
+            
+            <!-- Stripeの決済フォーム用コンテナ -->
+            <div id="stripe-payment-element-container" class="payment-form-container">
+                <!-- Stripeの要素がここに挿入されます -->
+            </div>
+            
+            <div class="modal-buttons">
+                <button id="cancelStripePayment" class="modal-button cancel-button">キャンセル</button>
+                <button id="submitStripePayment" class="modal-button confirm-button">
+                    <span class="button-text">¥500を支払う</span>
+                    <span class="button-glow"></span>
+                </button>
+            </div>
+            <!-- エラーメッセージ表示用 -->
+            <div id="stripe-error" class="payment-error" style="display: none; color: red; margin-top: 15px;"></div>
         </div>
     </div>
     
