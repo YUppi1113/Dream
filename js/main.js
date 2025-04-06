@@ -121,15 +121,17 @@ async function generatePsychicReading(dream) {
             await new Promise(resolve => setTimeout(resolve, 1000));
             
             console.log('霊視APIリクエスト送信中...');
-            // URLSearchParamsを使用してGETリクエストのクエリパラメータを構築
-            const params = new URLSearchParams({
-                dream,
-                timestamp: new Date().toISOString()
-            });
             
-            // GETメソッドで送信
-            const response = await fetch(`${APP_CONFIG.api.psychicReadingEndpoint}?${params.toString()}`, {
-                method: 'GET'
+            // 夢の内容が長いためPOSTメソッドで送信
+            const response = await fetch(APP_CONFIG.api.psychicReadingEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    dream,
+                    timestamp: new Date().toISOString()
+                })
             });
             
             console.log('霊視APIレスポンス受信:', response.status);
@@ -268,6 +270,23 @@ async function displayTarotInterpretation() {
             resultSection.style.display = 'block';
         }
         
+        // すべてのボタンを非表示にする（解釈完了後に表示）
+        const premiumButtonInResult = document.getElementById('premiumButtonInResult');
+        const resetButtonInResult = document.getElementById('resetButtonInResult');
+        const bottomResetButton = document.querySelector('.bottom-reset-button');
+        
+        if (premiumButtonInResult) {
+            premiumButtonInResult.style.display = 'none';
+        }
+        
+        if (resetButtonInResult) {
+            resetButtonInResult.style.display = 'none';
+        }
+        
+        if (bottomResetButton) {
+            bottomResetButton.style.display = 'none';
+        }
+        
         // タロットカードコンテナをクリア
         selectedCardsContainer.innerHTML = '';
         
@@ -336,6 +355,18 @@ async function displayTarotInterpretation() {
     } catch (error) {
         console.error('タロット解釈エラー:', error);
         tarotInterpretationText.innerHTML = '<div class="error">タロット解読中にエラーが発生しました。後ほど再度お試しください。</div>';
+        
+        // エラー時にもリセットボタンを表示する
+        const resetButtonInResult = document.getElementById('resetButtonInResult');
+        if (resetButtonInResult) {
+            resetButtonInResult.style.display = 'block';
+        }
+        
+        // 最下部の「別の夢を霊視する」ボタンも表示
+        const bottomResetButton = document.querySelector('.bottom-reset-button');
+        if (bottomResetButton) {
+            bottomResetButton.style.display = 'flex';
+        }
     }
 }
 
@@ -392,7 +423,13 @@ async function getDeepInterpretation(selectedCards, dream, textElement) {
             // 解釈完了時の音響効果
             playMysticSound('complete');
             
-            // 最下部の「別の夢を霊視する」ボタンを表示
+            // タロット解釈表示後に「別の夢を霊視する」ボタンを表示
+            const resetButtonInResult = document.getElementById('resetButtonInResult');
+            if (resetButtonInResult) {
+                resetButtonInResult.style.display = 'block';
+            }
+            
+            // 最下部の「別の夢を霊視する」ボタンも表示
             const bottomResetButton = document.querySelector('.bottom-reset-button');
             if (bottomResetButton) {
                 bottomResetButton.style.display = 'flex';
@@ -406,6 +443,18 @@ async function getDeepInterpretation(selectedCards, dream, textElement) {
                 '【さらなる夢の深層解釈】\n\n深層解釈の生成中にエラーが発生しました。後ほど再度お試しください。');
             
             textElement.innerHTML = newText;
+            
+            // エラー時にもリセットボタンを表示する
+            const resetButtonInResult = document.getElementById('resetButtonInResult');
+            if (resetButtonInResult) {
+                resetButtonInResult.style.display = 'block';
+            }
+            
+            // 最下部の「別の夢を霊視する」ボタンも表示
+            const bottomResetButton = document.querySelector('.bottom-reset-button');
+            if (bottomResetButton) {
+                bottomResetButton.style.display = 'flex';
+            }
         }
     } catch (error) {
         console.error('深層解釈表示エラー:', error);
@@ -606,6 +655,26 @@ function initApp() {
     const bottomResetButton = document.querySelector('.bottom-reset-button');
     console.log('bottomResetButton:', bottomResetButton);
     
+    // ページリロード時に課金状態をリセット
+    if (window.performance && window.performance.navigation && 
+        window.performance.navigation.type === 1) { // 1はリロードを表す
+        console.log('ページがリロードされました。課金状態をリセットします。');
+        sessionStorage.removeItem('currentSessionPaid');
+        sessionStorage.removeItem('paymentSessionId');
+    } else {
+        // 近代的なブラウザ用の代替方法（Navigation Timing API v2）
+        try {
+            const navEntries = performance.getEntriesByType('navigation');
+            if (navEntries.length > 0 && navEntries[0].type === 'reload') {
+                console.log('ページがリロードされました (Navigation Timing API v2)。課金状態をリセットします。');
+                sessionStorage.removeItem('currentSessionPaid');
+                sessionStorage.removeItem('paymentSessionId');
+            }
+        } catch (e) {
+            console.log('Navigation API使用中にエラーが発生しました:', e);
+        }
+    }
+    
     // URLパラメータで決済完了のチェック
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session_id');
@@ -623,6 +692,25 @@ function initApp() {
         if (savedDream && dreamInput) {
             console.log('保存されていた夢の内容を復元します');
             dreamInput.value = savedDream;
+            
+            // 夢入力欄を読み取り専用にして編集できないようにする
+            dreamInput.setAttribute('readonly', 'readonly');
+            dreamInput.style.opacity = '0.8';
+            dreamInput.style.cursor = 'not-allowed';
+            dreamInput.style.borderColor = 'rgba(180, 140, 230, 0.4)';
+            
+            // 課金済みの場合は「夢を編集する」ボタンを表示しない
+            if (sessionStorage.getItem('currentSessionPaid') !== 'true') {
+                const editDreamButton = document.getElementById('editDreamButton');
+                if (editDreamButton) {
+                    editDreamButton.style.display = 'block';
+                }
+            }
+            
+            const psychicButton = document.getElementById('psychicButton');
+            if (psychicButton) {
+                psychicButton.style.display = 'none';
+            }
         }
         
         // 保存された霊視結果を復元
@@ -668,6 +756,21 @@ function initApp() {
         const paidContentContainer = document.querySelector('.paid-content-container');
         if (paidContentContainer) {
             paidContentContainer.style.display = 'flex';
+        }
+        
+        // 霊視結果全文表示後のボタン表示状態を保持
+        // 上部で既に定義されているので再定義しない
+        // const premiumButtonInResult = document.getElementById('premiumButtonInResult');
+        const resetButtonInResult = document.getElementById('resetButtonInResult');
+        
+        // 課金済みの場合は「より深い霊視」ボタンを非表示にする
+        if (premiumButtonInResult) {
+            premiumButtonInResult.style.display = 'none';
+        }
+        
+        // 「別の夢を霊視する」ボタンは表示
+        if (resetButtonInResult) {
+            resetButtonInResult.style.display = 'block';
         }
     }
     
@@ -799,54 +902,92 @@ function initApp() {
                 loadingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
             
+            // 霊視ボタンを押した瞬間に夢入力欄を読み取り専用にする
+            if (dreamInput) {
+                dreamInput.setAttribute('readonly', 'readonly');
+                dreamInput.style.opacity = '0.8';
+                dreamInput.style.cursor = 'not-allowed';
+                dreamInput.style.borderColor = 'rgba(180, 140, 230, 0.4)';
+                
+                // 夢を保存しておく（セッションストレージ）
+                sessionStorage.setItem('savedDream', dreamInput.value);
+                
+                // 霊視ボタンを非表示、課金済みでない場合は編集ボタンを表示
+                if (psychicButton) {
+                    psychicButton.style.display = 'none';
+                }
+                
+                // 課金済みの場合は「夢を編集する」ボタンを表示しない
+                if (sessionStorage.getItem('currentSessionPaid') !== 'true') {
+                    const editDreamButton = document.getElementById('editDreamButton');
+                    if (editDreamButton) {
+                        editDreamButton.style.display = 'block';
+                    }
+                }
+            }
+            
             try {
                 // 霊視結果の生成
                 const psychicReading = await generatePsychicReading(dream);
                 
-                // ローディングを非表示、結果を表示
+                // ローディングを非表示
                 if (loadingSection) {
                     loadingSection.style.display = 'none';
                 }
                 
+                // 結果セクションを表示するが、ボタンは非表示のまま
                 if (resultSection) {
                     resultSection.style.display = 'block';
+                    
+                    // 念のため、ボタンが非表示になっていることを確認
+                    const premiumButtonInResult = document.getElementById('premiumButtonInResult');
+                    const resetButtonInResult = document.getElementById('resetButtonInResult');
+                    if (premiumButtonInResult) premiumButtonInResult.style.display = 'none';
+                    if (resetButtonInResult) resetButtonInResult.style.display = 'none';
                 }
                 
                 // タイプライター効果で表示
                 if (resultText) {
                     resultText.innerHTML = '';
                     await typeWriter(psychicReading, resultText);
+                    
+                    // テキスト表示完了後に神秘的な音を再生（完了）
+                    playMysticSound('complete');
+                    
+                    // シェアセクションを表示
+                    if (shareSection) {
+                        shareSection.style.display = 'flex';
+                    }
+                    
+                    // 霊視結果全文表示後に「より深い霊視」ボタンを表示
+                    const premiumButtonInResult = document.getElementById('premiumButtonInResult');
+                    if (premiumButtonInResult) {
+                        premiumButtonInResult.style.display = 'block';
+                    }
+                    
+                    // 霊視結果全文表示後に「別の夢を霊視する」ボタンも表示
+                    const resetButtonInResult = document.getElementById('resetButtonInResult');
+                    if (resetButtonInResult) {
+                        resetButtonInResult.style.display = 'block';
+                    }
+                    
+                    // 最下部の「別の夢を霊視する」ボタンを表示
+                    const bottomResetButton = document.querySelector('.bottom-reset-button');
+                    if (bottomResetButton) {
+                        bottomResetButton.style.display = 'flex';
+                    }
+                    
+                    // タロット選択を自動表示（結果セクションも表示したまま）
+                    if (tarotSelection) {
+                        tarotSelection.style.display = 'block';
+                    }
+                    
+                    // 結果セクションが既に表示されていることを確認
+                    if (resultSection && resultSection.style.display === 'none') {
+                        resultSection.style.display = 'block';
+                    }
                 } else {
                     console.error('resultText要素が見つかりません');
-                }
-                
-                // 神秘的な音を再生（完了）
-                playMysticSound('complete');
-                
-                // シェアセクションを表示
-                if (shareSection) {
-                    shareSection.style.display = 'flex';
-                }
-                
-                // 最下部の「別の夢を霊視する」ボタンを表示
-                const bottomResetButton = document.querySelector('.bottom-reset-button');
-                if (bottomResetButton) {
-                    bottomResetButton.style.display = 'flex';
-                }
-                
-                // タロット選択を自動表示（結果セクションも表示したまま）
-                if (tarotSelection) {
-                    tarotSelection.style.display = 'block';
-                }
-                
-                // 結果セクションが既に表示されていることを確認
-                if (resultSection && resultSection.style.display === 'none') {
-                    resultSection.style.display = 'block';
-                }
-                
-                // 常に「より深い霊視」ボタンを表示
-                if (premiumButtonInResult) {
-                    premiumButtonInResult.style.display = 'block';
                 }
                 
                 // 結果までスクロール
@@ -892,8 +1033,123 @@ function initApp() {
     function resetDreamReading() {
         console.log('別の夢を霊視するボタンがクリックされました');
         
-        // ページをリロードして初期状態に戻す
-        window.location.reload();
+        // 課金状態をリセット - 新しい夢の霊視では再度課金が必要
+        sessionStorage.removeItem('currentSessionPaid');
+        sessionStorage.removeItem('paymentSessionId');
+        console.log('課金状態をリセットしました');
+        
+        // 夢入力欄のreadonly属性を解除して再度編集可能にする
+        const dreamInput = document.getElementById('dreamInput');
+        if (dreamInput) {
+            dreamInput.removeAttribute('readonly');
+            dreamInput.style.opacity = '1';
+            dreamInput.style.cursor = 'text';
+            dreamInput.style.borderColor = ''; // 元のスタイルに戻す
+            dreamInput.value = ''; // 入力内容をクリア
+            dreamInput.focus(); // フォーカスを移動
+        }
+        
+        // 霊視結果と関連セクションを非表示にする
+        const resultSection = document.querySelector('.result');
+        if (resultSection) {
+            resultSection.style.display = 'none';
+        }
+        
+        const tarotSelection = document.querySelector('.tarot-selection');
+        if (tarotSelection) {
+            tarotSelection.style.display = 'none';
+        }
+        
+        const tarotInterpretation = document.querySelector('.tarot-interpretation');
+        if (tarotInterpretation) {
+            tarotInterpretation.style.display = 'none';
+        }
+        
+        const shareSection = document.querySelector('.share-section');
+        if (shareSection) {
+            shareSection.style.display = 'none';
+        }
+        
+        const bottomResetButton = document.querySelector('.bottom-reset-button');
+        if (bottomResetButton) {
+            bottomResetButton.style.display = 'none';
+        }
+        
+        // 課金後コンテンツを非表示
+        const paidContentContainer = document.querySelector('.paid-content-container');
+        if (paidContentContainer) {
+            paidContentContainer.style.display = 'none';
+        }
+        
+        // 「夢を編集する」ボタンを非表示にし、「霊視を開始する」ボタンを表示
+        const editDreamButton = document.getElementById('editDreamButton');
+        if (editDreamButton) {
+            editDreamButton.style.display = 'none';
+        }
+        
+        const psychicButton = document.getElementById('psychicButton');
+        if (psychicButton) {
+            psychicButton.style.display = 'block';
+        }
+        
+        // タロットカードの選択状態をリセット
+        const selectedCards = document.querySelectorAll('.tarot-card.selected');
+        selectedCards.forEach(card => {
+            card.classList.remove('selected');
+            const cardContent = card.querySelector('.tarot-card-content');
+            if (cardContent) {
+                cardContent.style.transform = '';
+            }
+        });
+        
+        // ページの先頭にスクロール
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    // 「夢を編集する」ボタンの機能を実装する関数
+    function editDream() {
+        console.log('夢を編集するボタンがクリックされました');
+        
+        // 夢入力欄の読み取り専用属性を解除して編集可能にする
+        const dreamInput = document.getElementById('dreamInput');
+        if (dreamInput) {
+            dreamInput.removeAttribute('readonly');
+            dreamInput.style.opacity = '1';
+            dreamInput.style.cursor = 'text';
+            dreamInput.style.borderColor = ''; // 元のスタイルに戻す
+            dreamInput.focus(); // フォーカスを移動
+            
+            // 入力欄にスクロール
+            dreamInput.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // タロット関連のUIを非表示に
+        const tarotSelection = document.querySelector('.tarot-selection');
+        if (tarotSelection) {
+            tarotSelection.style.display = 'none';
+        }
+        
+        const tarotInterpretation = document.querySelector('.tarot-interpretation');
+        if (tarotInterpretation) {
+            tarotInterpretation.style.display = 'none';
+        }
+        
+        // 霊視結果セクションを非表示に
+        const resultSection = document.querySelector('.result');
+        if (resultSection) {
+            resultSection.style.display = 'none';
+        }
+        
+        // 「夢を編集する」ボタンを非表示にし、「霊視を開始する」ボタンを表示
+        const editDreamButton = document.getElementById('editDreamButton');
+        if (editDreamButton) {
+            editDreamButton.style.display = 'none';
+        }
+        
+        const psychicButton = document.getElementById('psychicButton');
+        if (psychicButton) {
+            psychicButton.style.display = 'block';
+        }
     }
     
     // 「別の夢を霊視する」ボタンのイベントリスナーを設定
@@ -905,6 +1161,12 @@ function initApp() {
     const resetButtonBottom = document.getElementById('resetButtonBottom');
     if (resetButtonBottom) {
         resetButtonBottom.addEventListener('click', resetDreamReading);
+    }
+    
+    // 「夢を編集する」ボタンのイベントリスナーを設定
+    const editDreamButton = document.getElementById('editDreamButton');
+    if (editDreamButton) {
+        editDreamButton.addEventListener('click', editDream);
     }
     
     // プレミアムボタンのイベント設定
@@ -1118,6 +1380,10 @@ function initApp() {
                 
                 // Stripeのチェックアウトページにリダイレクト
                 console.log('リダイレクト実行...');
+                // 支払い処理中モーダルを非表示にしてからStripeページにリダイレクト
+                if (paymentProcessingModal) {
+                    paymentProcessingModal.style.display = 'none';
+                }
                 window.location.href = url;
             } catch (error) {
                 console.error('決済セッション作成エラー:', error);
@@ -1161,8 +1427,15 @@ function initApp() {
             
             // より深い霊視ボタンを非表示にする
             const premiumButtonInResult = document.getElementById('premiumButtonInResult');
+            const resetButtonInResult = document.getElementById('resetButtonInResult');
+            
             if (premiumButtonInResult) {
                 premiumButtonInResult.style.display = 'none';
+            }
+            
+            // 「別の夢を霊視する」ボタンは表示
+            if (resetButtonInResult) {
+                resetButtonInResult.style.display = 'block';
             }
             
             // 霊視ボタンも非表示にする
@@ -1180,6 +1453,25 @@ function initApp() {
             if (savedDream && dreamInput) {
                 console.log('保存された夢の内容を復元します');
                 dreamInput.value = savedDream;
+                
+                // 夢入力欄を読み取り専用にして編集できないようにする
+                dreamInput.setAttribute('readonly', 'readonly');
+                dreamInput.style.opacity = '0.8';
+                dreamInput.style.cursor = 'not-allowed';
+                dreamInput.style.borderColor = 'rgba(180, 140, 230, 0.4)';
+                
+                // 課金済みの場合は「夢を編集する」ボタンを表示しない
+                if (sessionStorage.getItem('currentSessionPaid') !== 'true') {
+                    const editDreamButton = document.getElementById('editDreamButton');
+                    if (editDreamButton) {
+                        editDreamButton.style.display = 'block';
+                    }
+                }
+                
+                const psychicButton = document.getElementById('psychicButton');
+                if (psychicButton) {
+                    psychicButton.style.display = 'none';
+                }
             }
             
             // 保存された霊視結果を復元
