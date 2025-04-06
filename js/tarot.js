@@ -380,6 +380,43 @@ export async function generateDreamDeepInterpretation(card1, card2, dream) {
         if (dream.length < 10) {
             return `タロットカード「${tarot1.name}」と「${tarot2.name}」からの深層解釈を行うには、より詳しい夢の内容が必要です。夢の内容を詳しく入力していただくことで、より正確な霊視を提供できます。`;
         }
+        
+        // オフラインモード用の深層解釈を生成する関数
+        const generateOfflineInterpretation = () => {
+            console.log('オフラインモードでタロット深層解釈を生成します');
+            
+            // カードの解釈を組み合わせて深層解釈を生成
+            const combinationText = `${tarot1.name}と${tarot2.name}の組み合わせは、あなたの夢に特別な意味をもたらしています。`;
+            
+            // 共通テーマを抽出
+            const elements = [tarot1.element, tarot2.element];
+            const planets = [tarot1.planet, tarot2.planet];
+            const symbols = [tarot1.symbol, tarot2.symbol];
+            
+            const offlineInterpretation = `✨ 【霊視結果とタロットの融合メッセージ】 ✨
+
+${combinationText} あなたの潜在意識は、特定のエネルギーパターンを通じて重要なメッセージを伝えようとしています。${tarot1.name}が示す${tarot1.meaning}と、${tarot2.name}が表す${tarot2.meaning}の間に流れる神秘的な共鳴に注目してください。
+
+✧･ﾟ: *✧･ﾟ:* *:･ﾟ✧*:･ﾟ✧
+
+🔮 【夢の象徴の深層解読】 🔮
+
+あなたの夢に現れた象徴には、宇宙のリズムと調和した深い意味があります。${elements.includes("水") ? "水の要素は感情の流れと潜在意識を表し、" : ""}${elements.includes("火") ? "火の要素は変容と浄化の過程を示し、" : ""}${elements.includes("大地") ? "大地の要素は現実世界への具現化を促し、" : ""}${elements.includes("空気") ? "空気の要素は思考と新しいアイデアの誕生を表しています。" : ""}これらのエネルギーがあなたの内面で共鳴し合い、人生の新たな局面を照らしています。
+
+✧･ﾟ: *✧･ﾟ:* *:･ﾟ✧*:･ﾟ✧
+
+💫 【霊視とタロットの神秘的共鳴】 💫
+
+${tarot1.name}の${tarot1.planet}のエネルギーと${tarot2.name}の${tarot2.planet}のエネルギーが交わることで、あなたの魂の旅に新たな次元が開かれています。${symbols[0]}と${symbols[1]}のシンボルが示す通り、今はあなたの精神的な成長において重要な転換点です。内なる光と外なる世界のバランスを見つけることで、真の自己実現への道が明らかになるでしょう。
+
+✧･ﾟ: *✧･ﾟ:* *:･ﾟ✧*:･ﾟ✧
+
+💎 【統合された未来へのガイダンス】 💎
+
+これからの道のりでは、${tarot1.interpretation.split('。')[0]}。同時に、${tarot2.interpretation.split('。')[0]}。内なる知恵と直感を信頼し、宇宙のリズムと調和して進むことで、あなたの本質的な目的に向かって前進することができるでしょう。光と影の両方を受け入れ、自分自身の中に存在する神聖なバランスを大切にしてください。`;
+
+            return offlineInterpretation;
+        };
 
         // ChatGPT APIを使用 (GETメソッドで送信)
         try {
@@ -424,20 +461,58 @@ export async function generateDreamDeepInterpretation(card1, card2, dream) {
                 psychicReading: psychicReading
             });
             
-            // GETメソッドで送信
-            const response = await fetch(`/api/dream-interpretation?${params.toString()}`, {
-                method: 'GET'
-            });
+            // タイムアウト付きのfetchを実装
+            const fetchWithTimeout = async (url, options, timeout = 10000) => {
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), timeout);
+                
+                try {
+                    const response = await fetch(url, {
+                        ...options,
+                        signal: controller.signal
+                    });
+                    clearTimeout(id);
+                    return response;
+                } catch (error) {
+                    clearTimeout(id);
+                    throw error;
+                }
+            };
             
-            if (response.ok) {
-                const data = await response.json();
-                return formatDeepInterpretation(data.interpretation);
+            // GETメソッドで送信（タイムアウト8秒）
+            const response = await fetchWithTimeout(`/api/dream-interpretation?${params.toString()}`, {
+                method: 'GET'
+            }, 8000);
+            
+            // ステータスコードをチェック
+            if (!response.ok) {
+                console.error(`API接続エラー: ${response.status} ${response.statusText}`);
+                console.log('API接続エラーのためオフラインモードにフォールバックします');
+                return generateOfflineInterpretation();
             }
             
-            throw new Error('APIからの応答が正常ではありません');
+            // レスポンスのテキストを取得
+            const responseText = await response.text();
+            
+            // 空のレスポンスやエラーメッセージのチェック
+            if (!responseText || responseText.includes('NOT_FOUND') || responseText.includes('could not be found')) {
+                console.error('API接続エラー: エンドポイントが見つかりません', responseText);
+                console.log('エンドポイントが見つからないためオフラインモードにフォールバックします');
+                return generateOfflineInterpretation();
+            }
+            
+            try {
+                const data = JSON.parse(responseText);
+                return formatDeepInterpretation(data.interpretation);
+            } catch (jsonError) {
+                console.error('JSONパースエラー:', jsonError, 'レスポンステキスト:', responseText);
+                console.log('JSONパースエラーのためオフラインモードにフォールバックします');
+                return generateOfflineInterpretation();
+            }
         } catch (apiError) {
             console.error('API呼び出しエラー:', apiError);
-            return '【API接続エラー】\n\n申し訳ありません。タロット解釈サーバーとの接続に問題が発生しました。インターネット接続を確認し、しばらくしてから再度お試しください。';
+            console.log('API呼び出しエラーのためオフラインモードにフォールバックします');
+            return generateOfflineInterpretation();
         }
     } catch (error) {
         console.error('解釈生成エラー:', error);

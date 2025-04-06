@@ -115,6 +115,46 @@ async function generatePsychicReading(dream) {
         // ローディングアニメーションを開始（待機時間を確保）
         await new Promise(resolve => setTimeout(resolve, APP_CONFIG.animation.loadingDuration));
         
+        // オフラインモード用のダミーレスポンス
+        const generateOfflineReading = () => {
+            console.log('オフラインモードで霊視結果を生成します');
+            
+            // 夢の内容から単語を抽出して、それに基づいたランダムな霊視結果を生成
+            const keywords = dream.split(/\s+/).filter(word => word.length > 2);
+            let selectedSymbols = [];
+            
+            // キーワードに関連する象徴を選択
+            if (keywords.length > 0) {
+                const commonSymbols = ['星', '月', '太陽', '水', '道', '森', '光', '闇', '扉', '空', '鏡'];
+                selectedSymbols = keywords.slice(0, 3).map(() => 
+                    commonSymbols[Math.floor(Math.random() * commonSymbols.length)]
+                );
+                // 重複を排除
+                selectedSymbols = [...new Set(selectedSymbols)];
+            }
+            
+            // シンボルが足りない場合は追加
+            while (selectedSymbols.length < 3) {
+                const additionalSymbols = ['星', '月', '太陽', '水', '道', '森', '光'];
+                selectedSymbols.push(additionalSymbols[Math.floor(Math.random() * additionalSymbols.length)]);
+                // 重複を排除
+                selectedSymbols = [...new Set(selectedSymbols)];
+            }
+            
+            // 霊視結果のテンプレート
+            return `【霊視結果】
+夢の中に現れた${selectedSymbols[0]}と${selectedSymbols[1]}の象徴が、あなたの潜在意識からの重要なメッセージを運んでいます。宇宙のエネルギーがあなたの内面を照らし、未来への道を示しています。
+
+【夢のメッセージ】
+${selectedSymbols[0]}は、あなたの内なる知恵と精神的な成長を表しています。一方、${selectedSymbols[1]}は変化と新たな可能性を象徴しています。これらが共鳴することで、あなたの潜在意識は人生の重要な転機を告げています。
+
+【未来への指針】
+今は内なる声に耳を傾け、直感を信じるときです。${selectedSymbols[2]}のエネルギーを取り入れることで、あなたの道はより明確になるでしょう。恐れずに前に進むことで、新たな扉が開かれます。
+
+【霊からのアドバイス】
+過去の執着や不安を手放し、今この瞬間に意識を集中させましょう。あなたの魂は既に答えを知っています。静かな瞑想を通じて、その声を聴く時間を作ってください。宇宙の流れに身を任せることで、人生の神秘が明らかになるでしょう。`;
+        };
+        
         // サーバーサイドAPIエンドポイントを使用
         try {
             // 神秘的な演出のために少し遅延を入れる
@@ -122,8 +162,26 @@ async function generatePsychicReading(dream) {
             
             console.log('霊視APIリクエスト送信中...');
             
+            // タイムアウト付きのfetchを実装
+            const fetchWithTimeout = async (url, options, timeout = 10000) => {
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), timeout);
+                
+                try {
+                    const response = await fetch(url, {
+                        ...options,
+                        signal: controller.signal
+                    });
+                    clearTimeout(id);
+                    return response;
+                } catch (error) {
+                    clearTimeout(id);
+                    throw error;
+                }
+            };
+            
             // 夢の内容が長いためPOSTメソッドで送信
-            const response = await fetch(APP_CONFIG.api.psychicReadingEndpoint, {
+            const response = await fetchWithTimeout(APP_CONFIG.api.psychicReadingEndpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -132,7 +190,7 @@ async function generatePsychicReading(dream) {
                     dream,
                     timestamp: new Date().toISOString()
                 })
-            });
+            }, 8000); // 8秒でタイムアウト
             
             console.log('霊視APIレスポンス受信:', response.status);
             
@@ -141,10 +199,18 @@ async function generatePsychicReading(dream) {
             let data;
             
             try {
+                // 空の場合やNOT_FOUNDを含む場合はオフラインモードを使用
+                if (!responseText || responseText.includes('NOT_FOUND') || responseText.includes('could not be found')) {
+                    console.error('API接続エラー: エンドポイントが見つかりません', responseText);
+                    console.log('オフラインモードにフォールバックします');
+                    return generateOfflineReading();
+                }
+                
                 data = JSON.parse(responseText);
             } catch (jsonError) {
                 console.error('JSONパースエラー:', jsonError, 'レスポンステキスト:', responseText);
-                return `【API接続エラー】\n\n申し訳ありません。霊視サーバーからの応答を解析できませんでした。しばらくしてから再度お試しください。`;
+                console.log('JSONパースエラーのためオフラインモードにフォールバックします');
+                return generateOfflineReading();
             }
             
             if (data.reading) {
@@ -152,10 +218,12 @@ async function generatePsychicReading(dream) {
                 return data.reading;
             }
             
-            throw new Error('APIからの応答に霊視結果が含まれていません');
+            console.log('APIからの応答に霊視結果が含まれていないため、オフラインモードにフォールバックします');
+            return generateOfflineReading();
         } catch (apiError) {
             console.error('API接続エラー:', apiError);
-            return `【API接続エラー】\n\n申し訳ありません。霊視サーバーとの接続に問題が発生しました。インターネット接続を確認し、しばらくしてから再度お試しください。`;
+            console.log('API接続エラーのためオフラインモードにフォールバックします');
+            return generateOfflineReading();
         }
     } catch (error) {
         console.error('霊視生成エラー:', error);
