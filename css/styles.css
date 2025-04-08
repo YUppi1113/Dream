@@ -1239,6 +1239,233 @@ footer {
     text-decoration: underline;
 }
 
+/* ヘッダーリンク */
+.header-link {
+    text-decoration: none;
+    display: block;
+}
+
+/* プライバシーポリシー・利用規約ページ */
+.policy-card {
+    background-image: linear-gradient(45deg, var(--bg-dark), var(--bg-light));
+}
+
+.policy-content {
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+.last-updated {
+    font-size: 0.9rem;
+    color: var(--primary-light);
+    text-align: right;
+    margin-bottom: 30px;
+    font-style: italic;
+}
+
+.policy-section {
+    margin-bottom: 30px;
+}
+
+.policy-section h3 {
+    color: var(--accent-color);
+    font-size: 1.25rem;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.policy-section p {
+    margin-bottom: 15px;
+}
+
+.policy-section ul, .policy-section ol {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.policy-section li {
+    margin-bottom: 8px;
+}
+
+.policy-section a {
+    color: var(--primary-light);
+    text-decoration: none;
+    transition: color var(--transition-medium);
+}
+
+.policy-section a:hover {
+    color: var(--accent-color);
+    text-decoration: underline;
+}
+
+/* お問い合わせページ */
+.contact-card {
+    background-image: linear-gradient(45deg, var(--bg-dark), var(--bg-light));
+}
+
+.contact-intro {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.contact-form {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--text-light);
+}
+
+.required {
+    color: var(--error-color);
+    margin-left: 5px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1px solid var(--primary-light);
+    background-color: rgba(0, 0, 0, 0.3);
+    color: var(--text-light);
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1rem;
+    transition: border var(--transition-medium), box-shadow var(--transition-medium);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(155, 89, 182, 0.5);
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: auto;
+    margin-top: 4px;
+}
+
+.checkbox-container label {
+    margin-bottom: 0;
+    font-weight: 400;
+}
+
+.submit-button {
+    min-width: 200px;
+}
+
+/* コンタクトフォーム - ローディング、成功、エラー表示 */
+.contact-loading, .contact-success, .contact-error {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 30px 0;
+}
+
+.contact-loading {
+    justify-content: center;
+}
+
+.success-icon, .error-icon {
+    font-size: 2.5rem;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.success-icon {
+    color: var(--success-color);
+    background-color: rgba(39, 174, 96, 0.1);
+    border: 2px solid var(--success-color);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.error-icon {
+    color: var(--error-color);
+    background-color: rgba(231, 76, 60, 0.1);
+    border: 2px solid var(--error-color);
+}
+
+.contact-success h3, .contact-error h3 {
+    color: var(--accent-color);
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.contact-success p, .contact-error p {
+    margin-bottom: 15px;
+    line-height: 1.6;
+    max-width: 600px;
+}
+
+/* FAQセクション */
+.faq-card {
+    margin-top: 40px;
+    background-image: linear-gradient(45deg, var(--bg-dark), var(--bg-light));
+}
+
+.faq-item {
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(155, 89, 182, 0.2);
+    padding-bottom: 20px;
+}
+
+.faq-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+.faq-item h3 {
+    color: var(--accent-color);
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.faq-item p {
+    line-height: 1.7;
+}
+
+.faq-item a {
+    color: var(--primary-light);
+    text-decoration: none;
+    transition: color var(--transition-medium);
+}
+
+.faq-item a:hover {
+    color: var(--accent-color);
+    text-decoration: underline;
+}
+
 /* 読み込み中のアニメーション */
 .loading-indicator {
     display: flex;

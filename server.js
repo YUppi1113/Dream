@@ -394,6 +394,46 @@ app.post('/api/webhook', async (req, res) => {
   }
 });
 
+// お問い合わせフォーム送信エンドポイント
+app.post('/api/contact', async (req, res) => {
+  try {
+    // フォームデータの取得と検証
+    const { name, email, subject, category, message } = req.body;
+    
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({ error: '必須項目が入力されていません' });
+    }
+    
+    // メールアドレスの簡易バリデーション
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'メールアドレスの形式が正しくありません' });
+    }
+    
+    console.log('お問い合わせを受信しました：', {
+      name,
+      email,
+      subject,
+      category,
+      messageLength: message.length
+    });
+    
+    // ここで実際には以下の処理を行います：
+    // 1. データベースへの保存
+    // 2. 管理者へのメール通知
+    // 3. ユーザーへの自動返信メール
+    
+    // デモ用に処理成功を返す
+    return res.json({ 
+      success: true, 
+      message: 'お問い合わせを受け付けました。2営業日以内にご返信いたします。' 
+    });
+  } catch (error) {
+    console.error('お問い合わせ処理エラー:', error);
+    res.status(500).json({ error: 'お問い合わせの処理中にエラーが発生しました' });
+  }
+});
+
 // サーバーの起動
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

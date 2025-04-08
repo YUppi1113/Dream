@@ -1,285 +1,430 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>夢霊視 - 神秘の解読者</title>
-    <meta name="description" content="あなたの夢を解読し、未来への道標を提供する神秘の霊視サービス">
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Yuji+Syuku&display=swap" rel="stylesheet">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    
+  <head>
+    <!-- 基本メタタグ -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>夢霊視 - タロットと霊能力で夢の意味を解読 | 神秘の解読者</title>
+    <meta
+      name="description"
+      content="あなたの夢を神秘的な力で解読し、潜在意識や未来への道標を提供する霊視サービス。タロットカードによる深い解釈で人生の転機や才能を発見できます。"
+    />
+    <meta
+      name="keywords"
+      content="夢占い,霊視,タロット占い,夢解釈,潜在意識,精神世界,スピリチュアル"
+    />
+    <meta name="author" content="夢霊視 - 神秘の解読者" />
+
+    <!-- ナビゲーション関連 -->
+    <link rel="canonical" href="https://dream-bice.vercel.app/" />
+    <meta name="robots" content="index, follow" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+
+    <!-- OGメタタグ -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://dream-bice.vercel.app/" />
+    <meta property="og:site_name" content="夢霊視" />
+    <meta
+      property="og:title"
+      content="夢霊視 - タロットと霊能力で夢の意味を解読"
+    />
+    <meta
+      property="og:description"
+      content="あなたの夢を神秘的な力で解読し、潜在意識や未来への道標を提供する霊視サービス。"
+    />
+    <meta
+      property="og:image"
+      content="https://dream-bice.vercel.app/images/dream-psychic-og.jpg"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card メタタグ -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="夢霊視 - タロットと霊能力で夢の意味を解読"
+    />
+    <meta
+      name="twitter:description"
+      content="あなたの夢を神秘的な力で解読し、潜在意識や未来への道標を提供する霊視サービス。"
+    />
+    <meta
+      name="twitter:image"
+      content="https://dream-bice.vercel.app/images/dream-psychic-twitter.jpg"
+    />
+
+    <!-- CSSとフォント -->
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Yuji+Syuku&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="/images/icons/apple-touch-icon.png" />
+    <meta name="theme-color" content="#280b4a" />
+
     <!-- Stripe.js -->
     <script src="https://js.stripe.com/v3/"></script>
-</head>
-<body>
+
+    <!-- 構造化データ -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "夢霊視 - 神秘の解読者",
+        "url": "https://dream-bice.vercel.app/",
+        "description": "あなたの夢を神秘的な力で解読し、潜在意識や未来への道標を提供する霊視サービス。",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://dream-bice.vercel.app/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": "夢霊視サービス",
+        "description": "タロットカードと霊視を組み合わせた夢解読サービス",
+        "provider": {
+          "@type": "Organization",
+          "name": "夢霊視 - 神秘の解読者",
+          "logo": "https://dream-bice.vercel.app/images/logo.png"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "JPY",
+          "description": "基本霊視サービス（無料）"
+        },
+        "termsOfService": "https://dream-bice.vercel.app/terms",
+        "category": "スピリチュアルサービス"
+      }
+    </script>
+  </head>
+  <body>
     <!-- 背景の星空効果 -->
     <div class="stars-container">
-        <div class="stars stars-small"></div>
-        <div class="stars stars-medium"></div>
-        <div class="stars stars-large"></div>
+      <div class="stars stars-small"></div>
+      <div class="stars stars-medium"></div>
+      <div class="stars stars-large"></div>
     </div>
-    
+
     <!-- カーソルエフェクト -->
     <div class="cursor-glow"></div>
-    
+
     <!-- 五芒星 -->
     <div class="pentagram-container">
-        <div class="pentagram" id="pentagram"></div>
+      <div class="pentagram" id="pentagram"></div>
     </div>
-    
+
     <!-- 神秘の目 -->
-    <img class="eye" id="mysticeye" alt="神秘の目">
-    
+    <img class="eye" id="mysticeye" alt="神秘の目" />
+
     <!-- メインコンテンツ -->
     <div class="container">
-        <header>
-            <h1 class="title-main">夢霊視</h1>
-            <h2 class="title-sub">〜神秘の解読者〜</h2>
-        </header>
-        
-        <!-- 入力カード -->
-        <div class="card dream-input-card">
-            <div class="card-content">
-                <p class="instruction">あなたの見た夢を入力してください。霊視者が夢の中に隠された真実と未来への道標を読み解きます。</p>
-                <textarea id="dreamInput" placeholder="夢の内容を詳しく教えてください...（例：空を飛ぶ夢を見ました。高い山の上から飛び立ち、雲の上を自由に飛んでいました...）"></textarea>
-                <div class="button-container">
-                    <button id="psychicButton" class="glow-button">
-                        <span class="button-text">霊視を開始する</span>
-                        <span class="button-glow"></span>
-                    </button>
-                    <button id="editDreamButton" class="glow-button" style="display: none;">
-                        <span class="button-text">夢を編集する</span>
-                        <span class="button-glow"></span>
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- ローディング表示 -->
-        <div class="loading">
-            <div class="loading-pentagram" id="loadingPentagram"></div>
-            <p class="loading-text">霊界と交信中<span class="loading-dots">...</span></p>
-            <div class="spirit-particles"></div>
-        </div>
-        
-        <!-- 結果表示 -->
-        <div class="result">
-            <!-- 基本霊視結果 -->
-            <div class="card result-card">
-                <div class="card-header">
-                    <h2>霊視結果</h2>
-                    <div class="card-decoration"></div>
-                </div>
-                <div class="result-text" id="resultText"></div>
-                <div class="button-container">
-                    <button id="premiumButtonInResult" class="premium-button" style="display: none;">
-                        <span class="button-text">より深い霊視</span>
-                        <span class="price-tag">¥500</span>
-                        <span class="button-glow"></span>
-                    </button>
-                    <button id="resetButtonInResult" class="glow-button" style="display: none;">
-                        <span class="button-text">別の夢を霊視する</span>
-                        <span class="button-glow"></span>
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 課金後のコンテンツ（霊視結果とタロット解釈を並列表示するコンテナ） -->
-        <div class="paid-content-container">
-            <!-- 結果は上記のdiv.resultに表示される -->
-            
-            <!-- タロット選択セクション -->
-            <div class="tarot-selection">
-                <h2 class="section-title">タロットカードを選んでください</h2>
-                <p class="section-description">あなたの直感で2枚のカードを選んでください。カードはあなたの夢の秘密をさらに明らかにするでしょう。</p>
-                
-                <div class="tarot-cards-container">
-                    <div class="tarot-cards" id="tarotCards">
-                        <!-- タロットカードはJavaScriptで生成 -->
-                    </div>
-                </div>
-                
-                <!-- タロット解釈結果 -->
-                <div class="tarot-interpretation">
-                    <div class="interpretation-header">
-                        <h2>タロット霊視結果</h2>
-                        <div class="header-decoration"></div>
-                    </div>
-                    
-                    <div class="selected-cards-container">
-                        <div class="selected-cards" id="selectedCards"></div>
-                    </div>
-                    
-                    <div class="result-text" id="tarotInterpretationText"></div>
-                    
-                    <div class="symbol-map" id="symbolMap"></div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- シェアボタン -->
-        <div class="share-section">
-            <p class="share-text">この霊視結果を共有する</p>
-            <div class="share-buttons" id="shareButtons">
-                <!-- SNSシェアボタンはJavaScriptで生成 -->
-            </div>
-        </div>
-        
-        <!-- 別の夢を霊視するボタン（最下部） -->
-        <div class="button-container bottom-reset-button">
-            <button id="resetButtonBottom" class="glow-button">
-                <span class="button-text">別の夢を霊視する</span>
-                <span class="button-glow"></span>
+      <header>
+        <h1 class="title-main">夢霊視</h1>
+        <h2 class="title-sub">〜神秘の解読者〜</h2>
+      </header>
+
+      <!-- 入力カード -->
+      <div class="card dream-input-card">
+        <div class="card-content">
+          <p class="instruction">
+            あなたの見た夢を入力してください。霊視者が夢の中に隠された真実と未来への道標を読み解きます。
+          </p>
+          <textarea
+            id="dreamInput"
+            placeholder="夢の内容を詳しく教えてください...（例：空を飛ぶ夢を見ました。高い山の上から飛び立ち、雲の上を自由に飛んでいました...）"
+          ></textarea>
+          <div class="button-container">
+            <button id="psychicButton" class="glow-button">
+              <span class="button-text">霊視を開始する</span>
+              <span class="button-glow"></span>
             </button>
+            <button
+              id="editDreamButton"
+              class="glow-button"
+              style="display: none"
+            >
+              <span class="button-text">夢を編集する</span>
+              <span class="button-glow"></span>
+            </button>
+          </div>
         </div>
+      </div>
+
+      <!-- ローディング表示 -->
+      <div class="loading">
+        <div class="loading-pentagram" id="loadingPentagram"></div>
+        <p class="loading-text">
+          霊界と交信中<span class="loading-dots">...</span>
+        </p>
+        <div class="spirit-particles"></div>
+      </div>
+
+      <!-- 結果表示 -->
+      <div class="result">
+        <!-- 基本霊視結果 -->
+        <div class="card result-card">
+          <div class="card-header">
+            <h2>霊視結果</h2>
+            <div class="card-decoration"></div>
+          </div>
+          <div class="result-text" id="resultText"></div>
+          <div class="button-container">
+            <button
+              id="premiumButtonInResult"
+              class="premium-button"
+              style="display: none"
+            >
+              <span class="button-text">より深い霊視</span>
+              <span class="price-tag">¥500</span>
+              <span class="button-glow"></span>
+            </button>
+            <button
+              id="resetButtonInResult"
+              class="glow-button"
+              style="display: none"
+            >
+              <span class="button-text">別の夢を霊視する</span>
+              <span class="button-glow"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 課金後のコンテンツ（霊視結果とタロット解釈を並列表示するコンテナ） -->
+      <div class="paid-content-container">
+        <!-- 結果は上記のdiv.resultに表示される -->
+
+        <!-- タロット選択セクション -->
+        <div class="tarot-selection">
+          <h2 class="section-title">タロットカードを選んでください</h2>
+          <p class="section-description">
+            あなたの直感で2枚のカードを選んでください。カードはあなたの夢の秘密をさらに明らかにするでしょう。
+          </p>
+
+          <div class="tarot-cards-container">
+            <div class="tarot-cards" id="tarotCards">
+              <!-- タロットカードはJavaScriptで生成 -->
+            </div>
+          </div>
+
+          <!-- タロット解釈結果 -->
+          <div class="tarot-interpretation">
+            <div class="interpretation-header">
+              <h2>タロット霊視結果</h2>
+              <div class="header-decoration"></div>
+            </div>
+
+            <div class="selected-cards-container">
+              <div class="selected-cards" id="selectedCards"></div>
+            </div>
+
+            <div class="result-text" id="tarotInterpretationText"></div>
+
+            <div class="symbol-map" id="symbolMap"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- シェアボタン -->
+      <div class="share-section">
+        <p class="share-text">この霊視結果を共有する</p>
+        <div class="share-buttons" id="shareButtons">
+          <!-- SNSシェアボタンはJavaScriptで生成 -->
+        </div>
+      </div>
+
+      <!-- 別の夢を霊視するボタン（最下部） -->
+      <div class="button-container bottom-reset-button">
+        <button id="resetButtonBottom" class="glow-button">
+          <span class="button-text">別の夢を霊視する</span>
+          <span class="button-glow"></span>
+        </button>
+      </div>
     </div>
-    
+
     <!-- プレミアム課金モーダル -->
     <div class="modal" id="premiumModal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <button class="close-button">&times;</button>
-            <h2 class="modal-title">プレミアム霊視</h2>
-            <div class="modal-decoration"></div>
-            <p class="modal-text">より深い霊視を受けるには、¥500の支払いが必要です。この特別な霊視では、タロットカードを用いてあなたの夢の隠された意味をより詳しく解読します。<span class="highlight-text">※プレミアム霊視は都度課金制です。新しい夢の霊視ごとにお支払いが必要となります。</span></p>
-            <div class="premium-features">
-                <div class="feature">
-                    <div class="feature-icon">✧</div>
-                    <div class="feature-text">タロットカードによる深層解釈</div>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">✧</div>
-                    <div class="feature-text">シンボルマップの詳細な分析</div>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">✧</div>
-                    <div class="feature-text">潜在意識からのメッセージ解読</div>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">✧</div>
-                    <div class="feature-text">前世からの才能と使命の発見</div>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">✧</div>
-                    <div class="feature-text">AIによる高度な霊視解析</div>
-                </div>
-            </div>
-            <div class="modal-buttons">
-                <button id="cancelPremium" class="modal-button cancel-button">キャンセル</button>
-                <button id="confirmPremium" class="modal-button confirm-button">
-                    <span class="button-text">支払いを続ける</span>
-                    <span class="button-glow"></span>
-                </button>
-            </div>
-            <!-- エラーメッセージ表示用 -->
-            <div id="payment-error" class="payment-error" style="display: none; color: red; margin-top: 15px;"></div>
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <button class="close-button">&times;</button>
+        <h2 class="modal-title">プレミアム霊視</h2>
+        <div class="modal-decoration"></div>
+        <p class="modal-text">
+          より深い霊視を受けるには、¥500の支払いが必要です。この特別な霊視では、タロットカードを用いてあなたの夢の隠された意味をより詳しく解読します。<span
+            class="highlight-text"
+            >※プレミアム霊視は都度課金制です。新しい夢の霊視ごとにお支払いが必要となります。</span
+          >
+        </p>
+        <div class="premium-features">
+          <div class="feature">
+            <div class="feature-icon">✧</div>
+            <div class="feature-text">タロットカードによる深層解釈</div>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">✧</div>
+            <div class="feature-text">シンボルマップの詳細な分析</div>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">✧</div>
+            <div class="feature-text">潜在意識からのメッセージ解読</div>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">✧</div>
+            <div class="feature-text">前世からの才能と使命の発見</div>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">✧</div>
+            <div class="feature-text">AIによる高度な霊視解析</div>
+          </div>
         </div>
+        <div class="modal-buttons">
+          <button id="cancelPremium" class="modal-button cancel-button">
+            キャンセル
+          </button>
+          <button id="confirmPremium" class="modal-button confirm-button">
+            <span class="button-text">支払いを続ける</span>
+            <span class="button-glow"></span>
+          </button>
+        </div>
+        <!-- エラーメッセージ表示用 -->
+        <div
+          id="payment-error"
+          class="payment-error"
+          style="display: none; color: red; margin-top: 15px"
+        ></div>
+      </div>
     </div>
-    
+
     <!-- Stripe決済モーダル -->
     <div class="modal" id="stripePaymentModal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <button class="close-button" id="closeStripeModal">&times;</button>
-            <h2 class="modal-title">安全なお支払い</h2>
-            <div class="modal-decoration"></div>
-            <p class="modal-text">Stripeによる安全な決済システムで支払いを処理します。以下のフォームにクレジットカード情報を入力してください。</p>
-            
-            <!-- Stripeの決済フォーム用コンテナ -->
-            <div id="stripe-payment-element-container" class="payment-form-container">
-                <!-- Stripeの要素がここに挿入されます -->
-            </div>
-            
-            <div class="modal-buttons">
-                <button id="cancelStripePayment" class="modal-button cancel-button">キャンセル</button>
-                <button id="submitStripePayment" class="modal-button confirm-button">
-                    <span class="button-text">¥500を支払う</span>
-                    <span class="button-glow"></span>
-                </button>
-            </div>
-            <!-- エラーメッセージ表示用 -->
-            <div id="stripe-error" class="payment-error" style="display: none; color: red; margin-top: 15px;"></div>
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <button class="close-button" id="closeStripeModal">&times;</button>
+        <h2 class="modal-title">安全なお支払い</h2>
+        <div class="modal-decoration"></div>
+        <p class="modal-text">
+          Stripeによる安全な決済システムで支払いを処理します。以下のフォームにクレジットカード情報を入力してください。
+        </p>
+
+        <!-- Stripeの決済フォーム用コンテナ -->
+        <div
+          id="stripe-payment-element-container"
+          class="payment-form-container"
+        >
+          <!-- Stripeの要素がここに挿入されます -->
         </div>
+
+        <div class="modal-buttons">
+          <button id="cancelStripePayment" class="modal-button cancel-button">
+            キャンセル
+          </button>
+          <button id="submitStripePayment" class="modal-button confirm-button">
+            <span class="button-text">¥500を支払う</span>
+            <span class="button-glow"></span>
+          </button>
+        </div>
+        <!-- エラーメッセージ表示用 -->
+        <div
+          id="stripe-error"
+          class="payment-error"
+          style="display: none; color: red; margin-top: 15px"
+        ></div>
+      </div>
     </div>
-    
+
     <!-- 支払い処理モーダル -->
     <div class="modal" id="paymentProcessingModal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <h2 class="modal-title">お支払い処理中</h2>
-            <div class="loading-indicator">
-                <div class="loading-pentagram" id="paymentLoadingPentagram"></div>
-            </div>
-            <div class="spirit-particles"></div>
-            <p class="modal-text">お支払い情報を処理しています。このページを閉じないでください...</p>
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <h2 class="modal-title">お支払い処理中</h2>
+        <div class="loading-indicator">
+          <div class="loading-pentagram" id="paymentLoadingPentagram"></div>
         </div>
+        <div class="spirit-particles"></div>
+        <p class="modal-text">
+          お支払い情報を処理しています。このページを閉じないでください...
+        </p>
+      </div>
     </div>
-    
+
     <!-- 支払い成功モーダル -->
     <div class="modal" id="paymentSuccessModal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <h2 class="modal-title">お支払い完了</h2>
-            <div class="success-mark">✓</div>
-            <p class="modal-text">プレミアム霊視のお支払いが完了しました。タロットカードを選択して深層霊視を受けることができます。</p>
-            <div class="modal-buttons">
-                <button id="continueToTarot" class="modal-button confirm-button">
-                    <span class="button-text">タロット選択へ進む</span>
-                    <span class="button-glow"></span>
-                </button>
-            </div>
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <h2 class="modal-title">お支払い完了</h2>
+        <div class="success-mark">✓</div>
+        <p class="modal-text">
+          プレミアム霊視のお支払いが完了しました。タロットカードを選択して深層霊視を受けることができます。
+        </p>
+        <div class="modal-buttons">
+          <button id="continueToTarot" class="modal-button confirm-button">
+            <span class="button-text">タロット選択へ進む</span>
+            <span class="button-glow"></span>
+          </button>
         </div>
+      </div>
     </div>
-    
+
     <!-- 初回訪問ガイドモーダル -->
     <div class="modal" id="welcomeModal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <button class="close-button">&times;</button>
-            <h2 class="modal-title">夢霊視へようこそ</h2>
-            <div class="modal-decoration"></div>
-            <p class="modal-text">夢霊視は、あなたの見た夢を解読し、その中に隠された意味や未来への暗示を読み解くサービスです。</p>
-            <div class="guide-steps">
-                <div class="guide-step">
-                    <div class="step-number">1</div>
-                    <div class="step-text">あなたの見た夢を詳しく入力してください</div>
-                </div>
-                <div class="guide-step">
-                    <div class="step-number">2</div>
-                    <div class="step-text">霊視者があなたの夢を解読します</div>
-                </div>
-                <div class="guide-step">
-                    <div class="step-number">3</div>
-                    <div class="step-text">さらに深い解釈を得るにはタロット選択へ</div>
-                </div>
-            </div>
-            <div class="modal-buttons">
-                <button id="startJourney" class="modal-button confirm-button">
-                    <span class="button-text">霊視の旅を始める</span>
-                    <span class="button-glow"></span>
-                </button>
-            </div>
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <button class="close-button">&times;</button>
+        <h2 class="modal-title">夢霊視へようこそ</h2>
+        <div class="modal-decoration"></div>
+        <p class="modal-text">
+          夢霊視は、あなたの見た夢を解読し、その中に隠された意味や未来への暗示を読み解くサービスです。
+        </p>
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="step-number">1</div>
+            <div class="step-text">あなたの見た夢を詳しく入力してください</div>
+          </div>
+          <div class="guide-step">
+            <div class="step-number">2</div>
+            <div class="step-text">霊視者があなたの夢を解読します</div>
+          </div>
+          <div class="guide-step">
+            <div class="step-number">3</div>
+            <div class="step-text">さらに深い解釈を得るにはタロット選択へ</div>
+          </div>
         </div>
+        <div class="modal-buttons">
+          <button id="startJourney" class="modal-button confirm-button">
+            <span class="button-text">霊視の旅を始める</span>
+            <span class="button-glow"></span>
+          </button>
+        </div>
+      </div>
     </div>
-    
+
     <footer>
-        <div class="footer-content">
-            <p class="copyright">&copy; 2025 夢霊視 - 神秘の解読者 | すべての権利を留保します</p>
-            <div class="footer-links">
-                <a href="#privacy">プライバシーポリシー</a>
-                <a href="#terms">利用規約</a>
-                <a href="#contact">お問い合わせ</a>
-            </div>
+      <div class="footer-content">
+        <p class="copyright">
+          &copy; 2025 夢霊視 - 神秘の解読者 | すべての権利を留保します
+        </p>
+        <div class="footer-links">
+          <a href="privacy-policy.html">プライバシーポリシー</a>
+          <a href="terms.html">利用規約</a>
+          <a href="contact.html">お問い合わせ</a>
         </div>
+      </div>
     </footer>
 
     <!-- モジュールとして読み込み -->
     <script type="module" src="assets/images.js"></script>
     <script type="module" src="js/tarot.js"></script>
     <script type="module" src="js/main.js"></script>
-</body>
+  </body>
 </html>
